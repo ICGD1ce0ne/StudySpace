@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1A1A1A">
+
+    <TextView
+        android:id="@+id/labelLoginIn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="35dp"
+        android:fontFamily="@font/montserrat_semibold"
+        android:text="Вход в"
+        android:textColor="#FFFFFF"
+        android:textSize="25sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/labelStudySpace"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="35dp"
+        android:fontFamily="@font/montserrat_semibold"
+        android:text="StudySpace"
+        android:textColor="#DA00E5"
+        android:textSize="25sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/labelLoginIn" />
+
+    <FrameLayout
+        android:id="@+id/layoutForPlusSeven"
+        android:layout_width="55dp"
+        android:layout_height="55dp"
+        android:layout_marginTop="14dp"
+        android:background="@drawable/fragment_background_for_input_pole"
+        app:layout_constraintStart_toStartOf="@+id/labelStudySpace"
+        app:layout_constraintTop_toBottomOf="@+id/labelStudySpace">
+
+        <TextView
+            android:id="@+id/labelPlusSeven"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:fontFamily="@font/montserrat_light"
+            android:text="+7"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/layoutForNumberInput"
+        android:layout_width="0dp"
+        android:layout_height="55dp"
+        android:layout_marginStart="7.5dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginEnd="35dp"
+        android:background="@drawable/fragment_background_for_input_pole"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/layoutForPlusSeven"
+        app:layout_constraintTop_toBottomOf="@+id/labelStudySpace">
+
+        <EditText
+            android:id="@+id/editTextPhone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="13dp"
+            android:background="@android:color/transparent"
+            android:ems="10"
+            android:maxLength="10"
+            android:fontFamily="@font/montserrat_light"
+            android:hint="(987)-654-32-10"
+            android:inputType="phone"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#FFFFFF"
+            android:textSize="16sp" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/layoutForLoginButton"
+        android:layout_width="0dp"
+        android:layout_height="55dp"
+        android:layout_marginHorizontal="35dp"
+        android:layout_marginBottom="45dp"
+        android:layout_marginTop="7.5dp"
+        android:background="@drawable/button_background_for_all"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/layoutForNumberInput">
+
+        <TextView
+            android:id="@+id/textLoginButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:fontFamily="@font/montserrat"
+            android:text="Войти"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+    </FrameLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

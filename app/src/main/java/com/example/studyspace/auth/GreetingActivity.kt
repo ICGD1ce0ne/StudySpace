@@ -53,13 +53,13 @@ class GreetingActivity : AppCompatActivity() {
         nextButton.setOnClickListener {
             val currentItem = viewPager.currentItem
             if (currentItem < 2) {
-                // Переход на следующую страницу
+                // Переход на следующую страницу приветствия
                 viewPager.currentItem = currentItem + 1
             } else {
-                // Последняя страница - переход к основной активности
-                // startActivity(Intent(this, MainActivity::class.java))
-                // finish()
-                // TODO: Заменить на вашу основную активность
+                // Последняя страница - переход к экрану авторизации
+                val intent = Intent(this, SignUpActivity::class.java)
+                startActivity(intent)
+                finish()
             }
         }
     }
