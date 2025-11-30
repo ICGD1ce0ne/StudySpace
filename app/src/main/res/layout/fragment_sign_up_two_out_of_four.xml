@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1A1A1A">
+
+    <TextView
+        android:id="@+id/labelFor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="35dp"
+        android:fontFamily="@font/montserrat_semibold"
+        android:text="Для"
+        android:textColor="#FFFFFF"
+        android:textSize="25sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/labelPersonalization"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="35dp"
+        android:fontFamily="@font/montserrat_semibold"
+        android:text="персонализации"
+        android:textColor="#FFFFFF"
+        android:textSize="25sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/labelFor" />
+
+    <FrameLayout
+        android:id="@+id/layoutForAgeInput"
+        android:layout_width="0dp"
+        android:layout_height="55dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginEnd="35dp"
+        android:background="@drawable/fragment_background_for_input_pole"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/labelPersonalization"
+        app:layout_constraintTop_toBottomOf="@+id/labelPersonalization">
+
+        <EditText
+            android:id="@+id/editTextAge"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginHorizontal="13dp"
+            android:background="@android:color/transparent"
+            android:ems="10"
+            android:fontFamily="@font/montserrat_light"
+            android:hint="Сколько вам лет?"
+            android:inputType="number"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#FFFFFF"
+            android:textSize="16sp" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/layoutForNextButton"
+        android:layout_width="0dp"
+        android:layout_height="55dp"
+        android:layout_marginHorizontal="35dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="45dp"
+        android:background="@drawable/button_background_for_all"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/layoutForAgeInput">
+
+        <TextView
+            android:id="@+id/textNextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:fontFamily="@font/montserrat"
+            android:text="Начать"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/textFAQ"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="35dp"
+        android:fontFamily="@font/montserrat_light"
+        android:gravity="center"
+        android:layout_marginBottom="25dp"
+        android:text="Мы не собираем и не храним ваши персональные данные. Всё остается на вашем устройстве."
+        android:textColor="#FFFFFF"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -6,27 +6,13 @@
     android:layout_height="match_parent"
     android:background="#1A1A1A">
 
-    <!-- ViewPager2 будет содержать фрагменты -->
+
     <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/viewPagerForSignUp"
+        android:id="@+id/viewPagerForRegister"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/labelSwitch"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/labelSwitch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="45dp"
-        android:fontFamily="@font/montserrat_light"
-        android:text="Еще нет аккаунта? Зарегистрироваться"
-        android:textColor="#FFFFFF"
-        android:textSize="13sp"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
