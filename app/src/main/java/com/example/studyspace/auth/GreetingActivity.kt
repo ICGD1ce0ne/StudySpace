@@ -79,6 +79,7 @@ class GreetingActivity : AppCompatActivity() {
                 // Последняя страница - переход к экрану авторизации
                 val intent = Intent(this, SignUpActivity::class.java)
                 startActivity(intent)
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
                 finish()
             }
         }

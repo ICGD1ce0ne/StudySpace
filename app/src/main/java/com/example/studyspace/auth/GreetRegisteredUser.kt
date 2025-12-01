@@ -9,7 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.studyspace.R
 import com.example.studyspace.main.MainActivity
 
-class GreetRegisteredUser  : AppCompatActivity() {
+class GreetRegisteredUser : AppCompatActivity() {
 
     private lateinit var labelName: TextView
 
@@ -30,6 +30,7 @@ class GreetRegisteredUser  : AppCompatActivity() {
         Handler(Looper.getMainLooper()).postDelayed({
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
             finish()
         }, 2000)
     }

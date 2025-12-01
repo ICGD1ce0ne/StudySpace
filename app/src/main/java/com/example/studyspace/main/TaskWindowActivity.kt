@@ -4,11 +4,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.example.studyspace.R
 
-class MainActivity : AppCompatActivity() {
+class TaskWindowActivity : AppCompatActivity() {
 
     private lateinit var buttonTaskList: ImageView
     private lateinit var buttonGoal: ImageView
@@ -16,8 +15,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_task_window)
 
         buttonTaskList = findViewById(R.id.buttonTaskList)
         buttonGoal = findViewById(R.id.buttonGoal)
@@ -28,13 +26,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun initButtons() {
         buttonTaskList.setOnClickListener {
-            val goToTaskWindow = Intent(this, TaskWindowActivity::class.java)
-            startActivity(goToTaskWindow)
-            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+            Toast.makeText(this, "Вы уже в задачах", Toast.LENGTH_SHORT).show()
         }
 
         buttonGoal.setOnClickListener {
-            Toast.makeText(this, "Вы уже в главном меню", Toast.LENGTH_SHORT).show()
+            val goToMainMenu = Intent(this, MainActivity::class.java)
+            startActivity(goToMainMenu)
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         }
 
         buttonAnalytic.setOnClickListener {
