@@ -1,6 +1,8 @@
 package com.example.studyspace.auth
 
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -21,6 +23,7 @@ class GreetingActivity : AppCompatActivity() {
     private lateinit var nextButton: FrameLayout
     private lateinit var statusIcon: ImageView
     private lateinit var textNextButton: TextView
+    private lateinit var sharedPreferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,10 +35,27 @@ class GreetingActivity : AppCompatActivity() {
         statusIcon = findViewById(R.id.statusIconOneOutOfThree)
         textNextButton = findViewById(R.id.textNextButton)
 
-        setupViewPager()
-        setupNextButton()
-        updateStatusIcon(0)
+        sharedPreferences = getSharedPreferences("user_preferences", Context.MODE_PRIVATE)
+
+        checkUser()
     }
+
+    private fun checkUser() {
+        val userName = sharedPreferences.getString("user_name", null)
+
+        if (userName != null) {
+            val intent = Intent(this, GreetRegisteredUser::class.java)
+
+            intent.putExtra("user_name", userName)
+            startActivity(intent)
+            finish()
+        } else {
+            setupViewPager()
+            setupNextButton()
+            updateStatusIcon(0)
+        }
+    }
+
 
     private fun setupViewPager() {
         viewPager.adapter = GreetingPagerAdapter(this)

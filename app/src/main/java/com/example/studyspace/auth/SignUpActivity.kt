@@ -1,6 +1,8 @@
 package com.example.studyspace.auth
 
 import android.content.Intent
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -16,10 +18,11 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.example.studyspace.R
 import com.example.studyspace.main.MainActivity
+import androidx.core.content.edit
 
 class SignUpActivity : AppCompatActivity() {
     private lateinit var viewPager: ViewPager2
-    private var userName: String = ""
+    private lateinit var sharedPreferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,7 +30,10 @@ class SignUpActivity : AppCompatActivity() {
 
         viewPager = findViewById(R.id.viewPagerForRegister)
         viewPager.adapter = SignUpPagerAdapter(this)
-        viewPager.isUserInputEnabled = false // Отключаем свайпы
+        viewPager.isUserInputEnabled = false
+
+        // Используем один файл для всех пользовательских данных
+        sharedPreferences = getSharedPreferences("user_preferences", Context.MODE_PRIVATE)
     }
 
     fun goToNextFragment() {
@@ -37,20 +43,30 @@ class SignUpActivity : AppCompatActivity() {
         }
     }
 
-    fun setUserName(name: String) {
-        this.userName = name
+    // Метод для сохранения имени в SharedPreferences
+    fun saveUserName(name: String) {
+        sharedPreferences.edit {
+            putString("user_name", name)
+        }
     }
 
+    // Метод для сохранения возраста в SharedPreferences
+    fun saveUserAge(age: String) {
+        sharedPreferences.edit {
+            putString("user_age", age)
+        }
+    }
+
+    // Метод для получения имени из SharedPreferences
     fun getUserName(): String {
-        return userName
+        return sharedPreferences.getString("user_name", "") ?: ""
     }
 
     fun completeSignUp() {
-        // Ждем 2 секунды на экране приветствия, затем переходим на MainActivity
         Handler(Looper.getMainLooper()).postDelayed({
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
-            finish() // Закрываем SignUpActivity чтобы нельзя было вернуться назад
+            finish()
         }, 2000)
     }
 
@@ -61,13 +77,7 @@ class SignUpActivity : AppCompatActivity() {
             return when (position) {
                 0 -> SignUpOneFragment()
                 1 -> SignUpTwoFragment()
-                2 -> SignUpThreeFragment()
-                3 -> SignUpFourFragment().apply {
-                    // Передаем имя в четвертый фрагмент
-                    arguments = Bundle().apply {
-                        putString("user_name", getUserName())
-                    }
-                }
+                2 -> SignUpFourFragment()
                 else -> SignUpOneFragment()
             }
         }
@@ -90,8 +100,9 @@ class SignUpOneFragment : Fragment() {
 
         layoutForNextButton.setOnClickListener {
             if (validateName()) {
-                // Сохраняем имя в Activity перед переходом
-                (activity as? SignUpActivity)?.setUserName(editTextName.text.toString().trim())
+                val userName = editTextName.text.toString().trim()
+                // Сохраняем имя в SharedPreferences через Activity
+                (activity as? SignUpActivity)?.saveUserName(userName)
                 (activity as? SignUpActivity)?.goToNextFragment()
             }
         }
@@ -126,6 +137,9 @@ class SignUpTwoFragment : Fragment() {
 
         layoutForNextButton.setOnClickListener {
             if (validateAge()) {
+                val userAge = editTextAge.text.toString().trim()
+                // Сохраняем возраст в SharedPreferences через Activity
+                (activity as? SignUpActivity)?.saveUserAge(userAge)
                 (activity as? SignUpActivity)?.goToNextFragment()
             }
         }
@@ -150,46 +164,6 @@ class SignUpTwoFragment : Fragment() {
     }
 }
 
-class SignUpThreeFragment : Fragment() {
-    private lateinit var editTextClass: EditText
-    private lateinit var layoutForNextButton: FrameLayout
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        val view = inflater.inflate(R.layout.fragment_sign_up_three_out_of_four, container, false)
-
-        editTextClass = view.findViewById(R.id.editTextClass)
-        layoutForNextButton = view.findViewById(R.id.layoutForNextButton)
-
-        layoutForNextButton.setOnClickListener {
-            if (validateClass()) {
-                (activity as? SignUpActivity)?.goToNextFragment()
-            }
-        }
-
-        return view
-    }
-
-    private fun validateClass(): Boolean {
-        val classText = editTextClass.text.toString().trim()
-        return if (classText.isNotEmpty()) {
-            val classNumber = classText.toIntOrNull()
-            if (classNumber != null && classNumber in 1..11) {
-                true
-            } else {
-                editTextClass.error = "Введите корректный класс (1-11)"
-                false
-            }
-        } else {
-            editTextClass.error = "Введите ваш класс"
-            false
-        }
-    }
-}
-
 class SignUpFourFragment : Fragment() {
 
     override fun onCreateView(
@@ -199,8 +173,8 @@ class SignUpFourFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_sign_up_four_out_of_four, container, false)
 
-        // Получаем имя из аргументов
-        val userName = arguments?.getString("user_name") ?: ""
+        // Получаем имя из SharedPreferences
+        val userName = (activity as? SignUpActivity)?.getUserName() ?: ""
         val labelName = view.findViewById<TextView>(R.id.labelName)
 
         // Устанавливаем имя пользователя
