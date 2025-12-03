@@ -46,16 +46,6 @@
 
             <include layout="@layout/fragment_task_task_window" />
 
-            <include layout="@layout/fragment_task_task_window" />
-
-            <include layout="@layout/fragment_task_task_window" />
-
-            <include layout="@layout/fragment_task_task_window" />
-
-            <include layout="@layout/fragment_task_task_window" />
-
-            <include layout="@layout/fragment_task_task_window" />
-
         </LinearLayout>
 
     </ScrollView>
