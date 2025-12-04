@@ -32,6 +32,19 @@ class TaskManager(private val context: Context) {
         }
     }
 
+    // Получить только активные (невыполненные) задачи
+    fun getActiveTasks(): List<Task> {
+        return getTasks().filter { !it.isCompleted }
+    }
+
+    // Получить задачи для фокуса (сегодняшние или без дедлайна)
+    fun getTasksForFocus(): List<Task> {
+        val today = Task.getTodayDate()
+        return getActiveTasks().filter {
+            it.deadline.isEmpty() || it.deadline == today
+        }
+    }
+
     // Добавить новую задачу
     fun addTask(task: Task) {
         val tasks = getTasks().toMutableList()
@@ -54,6 +67,11 @@ class TaskManager(private val context: Context) {
             tasks[index] = updatedTask
             saveTasks(tasks)
         }
+    }
+
+    // Получить задачу по ID
+    fun getTaskById(taskId: String): Task? {
+        return getTasks().find { it.id == taskId }
     }
 
     // Получить задачи, сгруппированные по дате
@@ -90,5 +108,58 @@ class TaskManager(private val context: Context) {
             count % 10 in 2..4 && count % 100 !in 12..14 -> "$count задачи"
             else -> "$count задач"
         }
+    }
+
+    // Получить задачи на сегодня
+    fun getTodayTasks(): List<Task> {
+        val today = Task.getTodayDate()
+        return getTasks().filter { it.deadline == today }
+    }
+
+    // Получить задачи на завтра
+    fun getTomorrowTasks(): List<Task> {
+        val tomorrow = Task.getTomorrowDate()
+        return getTasks().filter { it.deadline == tomorrow }
+    }
+
+    // Получить просроченные задачи
+    fun getOverdueTasks(): List<Task> {
+        val today = Calendar.getInstance()
+        val todayFormatted = Task.getTodayDate()
+
+        return getActiveTasks().filter { task ->
+            try {
+                val taskDate = dateFormat.parse(task.deadline)
+                taskDate?.before(today.time) == true && task.deadline != todayFormatted
+            } catch (e: Exception) {
+                false
+            }
+        }
+    }
+
+    // Очистить все выполненные задачи
+    fun clearCompletedTasks() {
+        val activeTasks = getActiveTasks()
+        saveTasks(activeTasks)
+    }
+
+    // Получить статистику по задачам
+    fun getTaskStats(): Map<String, Int> {
+        val tasks = getTasks()
+        val total = tasks.size
+        val completed = tasks.count { it.isCompleted }
+        val active = total - completed
+        val today = getTodayTasks().size
+        val tomorrow = getTomorrowTasks().size
+        val overdue = getOverdueTasks().size
+
+        return mapOf(
+            "total" to total,
+            "completed" to completed,
+            "active" to active,
+            "today" to today,
+            "tomorrow" to tomorrow,
+            "overdue" to overdue
+        )
     }
 }
