@@ -87,8 +87,6 @@
                 android:textColor="#FFFFFF"
                 android:textSize="18sp" />
 
-            <include layout="@layout/fragment_task_focus_window"/>
-            <include layout="@layout/fragment_task_focus_window"/>
 
         </LinearLayout>
 
