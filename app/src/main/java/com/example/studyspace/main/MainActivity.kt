@@ -15,8 +15,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.example.studyspace.R
-import com.example.studyspace.managers.TaskManager
-import com.example.studyspace.models.Task
+import com.example.studyspace.analytic.AnalyticWindowActivity
+import com.example.studyspace.task.models.TaskManager
+import com.example.studyspace.task.models.Task
+import com.example.studyspace.task.TaskWindowActivity
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -305,14 +307,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun startFocusSession() {
         if (selectedTask != null) {
-            val taskName = selectedTask?.title ?: "Задача"
+            val task = selectedTask!!
             val time = selectedTask?.time ?: "25:00"
 
-            // Здесь можно запустить таймер фокуса
-            Toast.makeText(this, "Запуск фокуса на задачу: $taskName\nВремя: $time", Toast.LENGTH_LONG).show()
-
-            // TODO: Реализовать логику таймера фокуса
-            // Например, запустить Service или использовать CountDownTimer
+            val intent = Intent(this, com.example.studyspace.focus.FocusWindowActivity::class.java).apply {
+                putExtra(com.example.studyspace.focus.FocusWindowActivity.EXTRA_TASK_ID, task.id)
+                putExtra(com.example.studyspace.focus.FocusWindowActivity.EXTRA_TASK_TITLE, task.title)
+                putExtra(com.example.studyspace.focus.FocusWindowActivity.EXTRA_TASK_TIME, time)
+            }
+            startActivity(intent)
+        } else {
+            Toast.makeText(this, "Выберите задачу для фокуса", Toast.LENGTH_SHORT).show()
         }
     }
 

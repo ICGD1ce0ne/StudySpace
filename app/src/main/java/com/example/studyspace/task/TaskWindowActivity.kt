@@ -1,21 +1,34 @@
-package com.example.studyspace.main
+package com.example.studyspace.task
 
 import android.app.DatePickerDialog
 import android.app.Dialog
 import android.app.TimePickerDialog
 import android.content.Intent
+import android.graphics.Paint
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.DialogFragment
 import com.example.studyspace.R
-import com.example.studyspace.managers.TaskManager
-import com.example.studyspace.models.Task
+import com.example.studyspace.analytic.AnalyticWindowActivity
+import com.example.studyspace.main.MainActivity
+import com.example.studyspace.task.models.TaskManager
+import com.example.studyspace.task.models.Task
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
+import kotlin.collections.iterator
 
 class TaskWindowActivity : AppCompatActivity() {
 
@@ -82,7 +95,7 @@ class TaskWindowActivity : AppCompatActivity() {
                 setTextColor(getColor(R.color.white))
                 textSize = 16f
                 typeface = resources.getFont(R.font.montserrat)
-                gravity = android.view.Gravity.CENTER_HORIZONTAL
+                gravity = Gravity.CENTER_HORIZONTAL
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
@@ -100,7 +113,7 @@ class TaskWindowActivity : AppCompatActivity() {
                     setTextColor(getColor(R.color.white))
                     textSize = 18f
                     typeface = resources.getFont(R.font.montserrat_medium)
-                    gravity = android.view.Gravity.START
+                    gravity = Gravity.START
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
@@ -141,7 +154,7 @@ class TaskWindowActivity : AppCompatActivity() {
         }
 
         if (task.isCompleted) {
-            taskNameLabel.paintFlags = android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
+            taskNameLabel.paintFlags = Paint.STRIKE_THRU_TEXT_FLAG
             taskNameLabel.alpha = 0.6f
         }
 
@@ -201,7 +214,12 @@ class TaskWindowActivity : AppCompatActivity() {
         val timePicker = TimePickerDialog(
             this,
             { _, selectedHour, selectedMinute ->
-                val time = String.format(Locale.getDefault(), "%02d:%02d", selectedHour, selectedMinute)
+                val time = String.Companion.format(
+                    Locale.getDefault(),
+                    "%02d:%02d",
+                    selectedHour,
+                    selectedMinute
+                )
                 editText.setText(time)
             },
             hour, minute, true // 24-часовой формат
@@ -272,15 +290,15 @@ class TaskWindowActivity : AppCompatActivity() {
 
             // Кнопки быстрого выбора даты
             layoutForTodayButton.setOnClickListener {
-                editTextDeadlineTask.setText(Task.getTodayDate())
+                editTextDeadlineTask.setText(Task.Companion.getTodayDate())
             }
 
             layoutForTomorrowButton.setOnClickListener {
-                editTextDeadlineTask.setText(Task.getTomorrowDate())
+                editTextDeadlineTask.setText(Task.Companion.getTomorrowDate())
             }
 
             layoutForAfterTomorrowButton.setOnClickListener {
-                editTextDeadlineTask.setText(Task.getAfterTomorrowDate())
+                editTextDeadlineTask.setText(Task.Companion.getAfterTomorrowDate())
             }
 
             layoutForOtherButton.setOnClickListener {
@@ -322,7 +340,7 @@ class TaskWindowActivity : AppCompatActivity() {
                 dismiss()
             }
 
-            view.findViewById<androidx.constraintlayout.widget.ConstraintLayout>(R.id.dialog_content)
+            view.findViewById<ConstraintLayout>(R.id.dialog_content)
                 ?.setOnClickListener {
                     // Ничего не делаем
                 }

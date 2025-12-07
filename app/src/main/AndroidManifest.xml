@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -33,12 +35,17 @@
             android:exported="false" />
 
         <activity
-            android:name=".main.TaskWindowActivity"
+            android:name=".task.TaskWindowActivity"
             android:exported="false" />
 
         <activity
-            android:name=".main.AnalyticWindowActivity"
+            android:name=".analytic.AnalyticWindowActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".focus.FocusWindowActivity"
+            android:exported="false"
+            android:theme="@style/Theme.StudySpace.FullScreen" />
 
         <meta-data
             android:name="preloaded_fonts"

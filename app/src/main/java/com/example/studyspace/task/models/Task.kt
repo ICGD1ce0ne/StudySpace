@@ -1,8 +1,8 @@
-// Task.kt
-package com.example.studyspace.models
+package com.example.studyspace.task.models
 
 import java.io.Serializable
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
@@ -32,21 +32,21 @@ data class Task(
 
     companion object {
         fun getTodayDate(): String {
-            val calendar = java.util.Calendar.getInstance()
+            val calendar = Calendar.getInstance()
             val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
             return dateFormat.format(calendar.time)
         }
 
         fun getTomorrowDate(): String {
-            val calendar = java.util.Calendar.getInstance()
-            calendar.add(java.util.Calendar.DAY_OF_YEAR, 1)
+            val calendar = Calendar.getInstance()
+            calendar.add(Calendar.DAY_OF_YEAR, 1)
             val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
             return dateFormat.format(calendar.time)
         }
 
         fun getAfterTomorrowDate(): String {
-            val calendar = java.util.Calendar.getInstance()
-            calendar.add(java.util.Calendar.DAY_OF_YEAR, 2)
+            val calendar = Calendar.getInstance()
+            calendar.add(Calendar.DAY_OF_YEAR, 2)
             val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
             return dateFormat.format(calendar.time)
         }

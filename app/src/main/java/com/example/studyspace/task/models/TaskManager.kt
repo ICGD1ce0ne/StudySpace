@@ -1,12 +1,12 @@
-package com.example.studyspace.managers
+package com.example.studyspace.task.models
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.example.studyspace.models.Task
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
 
 class TaskManager(private val context: Context) {
 
@@ -66,6 +66,15 @@ class TaskManager(private val context: Context) {
         if (index != -1) {
             tasks[index] = updatedTask
             saveTasks(tasks)
+        }
+    }
+
+    // Обновить только время задачи
+    fun updateTaskTime(taskId: String, time: String) {
+        val task = getTaskById(taskId)
+        task?.let {
+            val updatedTask = it.copy(time = time)
+            updateTask(updatedTask)
         }
     }
 
