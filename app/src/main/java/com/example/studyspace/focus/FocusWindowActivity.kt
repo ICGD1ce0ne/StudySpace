@@ -3,6 +3,8 @@ package com.example.studyspace.focus
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.VibrationEffect
@@ -21,16 +23,29 @@ import java.util.Locale
 
 class FocusWindowActivity : AppCompatActivity() {
 
+    private lateinit var labelFocus: TextView
     private lateinit var labelNameOfTask: TextView
     private lateinit var labelFocusTimer: TextView
     private lateinit var layoutForStopButton: FrameLayout
+    private lateinit var textStopButton: TextView
     private lateinit var taskManager: TaskManager
+
+    // MediaPlayer для воспроизведения звуков
+    private var mediaPlayer: MediaPlayer? = null
 
     private var selectedTask: Task? = null
     private var countDownTimer: CountDownTimer? = null
     private var remainingTimeMillis: Long = 0
-    private var totalTimeMillis: Long = 0
+    private var totalFocusTimeMillis: Long = 0 // Общее время фокуса (например, 60 мин)
+    private var currentBlockTimeMillis: Long = 0 // Время текущего блока (работа/перерыв)
     private var isTimerRunning = false
+    private var isBreakTime = false // true = сейчас перерыв, false = работа
+    private var currentBlock = 0 // Текущий блок (0, 1, 2...)
+    private var totalBlocks = 3 // Всего блоков работы
+    private var breakDuration = 5 // Длительность перерыва в минутах
+    private var workBlockDuration = 0 // Длительность рабочего блока в минутах
+    private var userAge = 25
+    private var isLastMinute = false
 
     companion object {
         const val EXTRA_TASK_ID = "extra_task_id"
@@ -39,17 +54,27 @@ class FocusWindowActivity : AppCompatActivity() {
         const val PREFS_FOCUS = "focus_prefs"
         const val KEY_REMAINING_TIME = "remaining_time"
         const val KEY_TASK_ID = "task_id"
+        const val KEY_IS_BREAK = "is_break"
+        const val KEY_CURRENT_BLOCK = "current_block"
+        const val KEY_TOTAL_FOCUS_TIME = "total_focus_time"
+        const val KEY_CURRENT_BLOCK_TIME = "current_block_time"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_focus_window)
 
+        labelFocus = findViewById(R.id.labelFocus)
         labelNameOfTask = findViewById(R.id.labelNameOfTask)
         labelFocusTimer = findViewById(R.id.labelFocusTimer)
         layoutForStopButton = findViewById(R.id.layoutForStopButton)
+        textStopButton = findViewById(R.id.textStopButton)
 
         taskManager = TaskManager(this)
+
+        // Получаем возраст пользователя
+        val prefs = getSharedPreferences("user_preferences", Context.MODE_PRIVATE)
+        userAge = prefs.getString("user_age", "25")?.toIntOrNull() ?: 25
 
         // Получаем данные из Intent
         val taskId = intent.getStringExtra(EXTRA_TASK_ID)
@@ -62,161 +87,255 @@ class FocusWindowActivity : AppCompatActivity() {
         }
 
         initViews(taskTitle ?: "Задача")
-        setupTimer(taskTime ?: "25:00")
+        calculateDurations(taskTime ?: "60:00")
+        loadAndSetupTimer()
         setupListeners()
     }
 
     private fun initViews(taskTitle: String) {
         labelNameOfTask.text = taskTitle
+        labelFocusTimer.setTextColor(Color.WHITE)
     }
 
-    private fun setupTimer(timeString: String) {
-        // Преобразуем строку времени в миллисекунды
-        val timeParts = timeString.split(":")
-        val minutes = timeParts.getOrNull(0)?.toIntOrNull() ?: 25
-        val seconds = timeParts.getOrNull(1)?.toIntOrNull() ?: 0
+    private fun calculateDurations(totalTimeString: String) {
+        // Преобразуем общее время фокуса в минуты
+        val timeParts = totalTimeString.split(":")
+        val totalMinutes = timeParts.getOrNull(0)?.toIntOrNull() ?: 60
 
-        totalTimeMillis = (minutes * 60 * 1000 + seconds * 1000).toLong()
+        // Настраиваем параметры в зависимости от возраста
+        when {
+            userAge <= 12 -> { // Дети
+                breakDuration = 3 // 3 минуты перерыв
+                totalBlocks = if (totalMinutes <= 30) 2 else 3
+            }
+            userAge <= 18 -> { // Подростки
+                breakDuration = 5 // 5 минут перерыв
+                totalBlocks = if (totalMinutes <= 45) 2 else 3
+            }
+            else -> { // Взрослые
+                breakDuration = 5 // 5 минут перерыв
+                totalBlocks = if (totalMinutes <= 60) 3 else 4
+            }
+        }
 
-        // Проверяем сохраненное состояние
+        // Рассчитываем длительность рабочего блока
+        // Общее время минус перерывы, деленное на количество рабочих блоков
+        val totalBreakTime = breakDuration * (totalBlocks - 1) // Перерывы между блоками
+        val totalWorkTime = totalMinutes - totalBreakTime
+        workBlockDuration = if (totalBlocks > 0) totalWorkTime / totalBlocks else totalMinutes
+
+        // Конвертируем в миллисекунды
+        totalFocusTimeMillis = totalMinutes * 60 * 1000L
+    }
+
+    private fun loadAndSetupTimer() {
         val prefs = getSharedPreferences(PREFS_FOCUS, MODE_PRIVATE)
         val savedTaskId = prefs.getString(KEY_TASK_ID, null)
         val savedRemainingTime = prefs.getLong(KEY_REMAINING_TIME, -1)
+        val savedIsBreak = prefs.getBoolean(KEY_IS_BREAK, false)
+        val savedCurrentBlock = prefs.getInt(KEY_CURRENT_BLOCK, 0)
+        val savedCurrentBlockTime = prefs.getLong(KEY_CURRENT_BLOCK_TIME, -1)
 
-        if (savedTaskId == selectedTask?.id && savedRemainingTime > 0) {
+        if (savedTaskId == selectedTask?.id && savedRemainingTime > 0 && savedCurrentBlockTime > 0) {
+            // Восстанавливаем сохраненную сессию
             remainingTimeMillis = savedRemainingTime
+            currentBlockTimeMillis = savedCurrentBlockTime
+            isBreakTime = savedIsBreak
+            currentBlock = savedCurrentBlock
+
+            if (isBreakTime) {
+                setupBreakBlock()
+            } else {
+                setupWorkBlock()
+            }
+
             updateTimerDisplay(remainingTimeMillis)
-            startTimer()
+
+            if (remainingTimeMillis > 0) {
+                startTimer()
+            }
         } else {
-            remainingTimeMillis = totalTimeMillis
-            updateTimerDisplay(remainingTimeMillis)
+            // Начинаем новый фокус с первого рабочего блока
+            startNewSession()
         }
+    }
+
+    private fun startNewSession() {
+        currentBlock = 0
+        isBreakTime = false
+        startWorkBlock()
+    }
+
+    private fun startWorkBlock() {
+        isBreakTime = false
+        currentBlockTimeMillis = workBlockDuration * 60 * 1000L
+        remainingTimeMillis = currentBlockTimeMillis
+        setupWorkBlock()
+        updateTimerDisplay(remainingTimeMillis)
+        saveTimerState()
+        // Воспроизводим звук начала работы
+        playSound(R.raw.alert)
+        startTimer()
+    }
+
+    private fun startBreakBlock() {
+        isBreakTime = true
+        currentBlockTimeMillis = breakDuration * 60 * 1000L
+        remainingTimeMillis = currentBlockTimeMillis
+        setupBreakBlock()
+        updateTimerDisplay(remainingTimeMillis)
+        saveTimerState()
+        // Воспроизводим звук начала перерыва
+        playSound(R.raw.alert)
+        startTimer()
+    }
+
+    private fun setupWorkBlock() {
+        labelFocus.text = "Фокус на задаче"
+        labelNameOfTask.text = "${selectedTask?.title ?: "Задача"} (Блок ${currentBlock + 1}/$totalBlocks)"
+        textStopButton.text = "Стоп"
+        labelFocusTimer.setTextColor(Color.WHITE)
+        isLastMinute = false
+    }
+
+    private fun setupBreakBlock() {
+        labelFocus.text = "Короткий перерыв"
+        labelNameOfTask.text = "Отдыхайте ${breakDuration} мин"
+        textStopButton.text = "Пропустить перерыв"
+        labelFocusTimer.setTextColor(Color.parseColor("#4CAF50")) // Зеленый
+        isLastMinute = false
     }
 
     private fun setupListeners() {
         layoutForStopButton.setOnClickListener {
-            showCancelDialog()
+            if (isBreakTime) {
+                showSkipBreakDialog()
+            } else {
+                showCancelFocusDialog()
+            }
         }
     }
 
     private fun startTimer() {
-        if (isTimerRunning) return
+        if (isTimerRunning || remainingTimeMillis <= 0) return
 
         isTimerRunning = true
+
         countDownTimer = object : CountDownTimer(remainingTimeMillis, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 remainingTimeMillis = millisUntilFinished
                 updateTimerDisplay(millisUntilFinished)
-
-                // Сохраняем текущее состояние
                 saveTimerState()
             }
 
             override fun onFinish() {
                 remainingTimeMillis = 0
-                updateTimerDisplay(0)
                 isTimerRunning = false
+                updateTimerDisplay(0)
 
-                // Очищаем сохраненное состояние
-                clearTimerState()
-
-                // 1. ВИБРАЦИЯ ПО ЗАВЕРШЕНИЮ
+                // Вибрация при завершении блока
                 vibrateOnCompletion()
 
-                // 2. ОТМЕТКА О ЗАВЕРШЕНИИ ЗАДАЧИ
-                markTaskAsCompleted()
-
-                // 3. ПОКАЗЫВАЕМ ДИАЛОГ ЗАВЕРШЕНИЯ ИЗ XML
-                showFocusCompletedDialog()
+                // Определяем, что делать дальше
+                if (isBreakTime) {
+                    // Завершился перерыв
+                    onBreakCompleted()
+                } else {
+                    // Завершился рабочий блок
+                    onWorkBlockCompleted()
+                }
             }
         }.start()
     }
 
-    private fun pauseTimer() {
-        countDownTimer?.cancel()
-        isTimerRunning = false
-        saveTimerState()
-    }
+    private fun onWorkBlockCompleted() {
+        currentBlock++
 
-    private fun resumeTimer() {
-        if (remainingTimeMillis > 0) {
-            startTimer()
+        if (currentBlock < totalBlocks) {
+            // Есть еще рабочие блоки, показываем перерыв
+            showBreakNotification()
+        } else {
+            // Все блоки завершены - фокус окончен
+            onFocusCompleted()
         }
     }
 
-    private fun stopTimer() {
-        countDownTimer?.cancel()
-        isTimerRunning = false
+    private fun onBreakCompleted() {
+        // Перерыв завершен, начинаем следующий рабочий блок
+        // Воспроизводим звук начала работы после перерыва
+        playSound(R.raw.alert)
+        startWorkBlock()
+    }
+
+    private fun onFocusCompleted() {
+        // Весь фокус завершен
+        // Воспроизводим звук окончания работы
+        playSound(R.raw.alert)
+        markTaskAsCompleted()
         clearTimerState()
+        showFocusCompletedDialog()
     }
 
-    private fun updateTimerDisplay(millis: Long) {
-        val minutes = (millis / 1000) / 60
-        val seconds = (millis / 1000) % 60
-        labelFocusTimer.text = String.format("%02d:%02d", minutes, seconds)
+    private fun showBreakNotification() {
+        // Показываем уведомление о перерыве
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_break_notification, null)
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        val labelBreakTitle = dialogView.findViewById<TextView>(R.id.labelBreakTitle)
+        val labelBreakMessage = dialogView.findViewById<TextView>(R.id.labelBreakMessage)
+        val layoutStartBreakButton = dialogView.findViewById<FrameLayout>(R.id.layoutStartBreakButton)
+        val layoutSkipBreakButton = dialogView.findViewById<FrameLayout>(R.id.layoutSkipBreakButton)
+
+        labelBreakTitle.text = "Время перерыва!"
+        labelBreakMessage.text = "Вы хорошо поработали ${workBlockDuration} минут. Отдохните $breakDuration минут перед следующим блоком."
+
+        val textStartBreakButton = dialogView.findViewById<TextView>(R.id.textStartBreakButton)
+        val textSkipBreakButton = dialogView.findViewById<TextView>(R.id.textSkipBreakButton)
+
+        textStartBreakButton.text = "Начать перерыв"
+        textSkipBreakButton.text = "Пропустить перерыв"
+
+        layoutStartBreakButton.setOnClickListener {
+            dialog.dismiss()
+            startBreakBlock()
+        }
+
+        layoutSkipBreakButton.setOnClickListener {
+            dialog.dismiss()
+            // Пропускаем перерыв и сразу начинаем следующий рабочий блок
+            // Воспроизводим звук начала работы
+            playSound(R.raw.alert)
+            startWorkBlock()
+        }
+
+        dialog.show()
     }
 
-    private fun saveTimerState() {
-        val prefs = getSharedPreferences(PREFS_FOCUS, MODE_PRIVATE)
-        val editor = prefs.edit()
-        editor.putLong(KEY_REMAINING_TIME, remainingTimeMillis)
-        editor.putString(KEY_TASK_ID, selectedTask?.id)
-        editor.apply()
-    }
+    private fun showSkipBreakDialog() {
+        pauseTimer()
 
-    private fun clearTimerState() {
-        val prefs = getSharedPreferences(PREFS_FOCUS, MODE_PRIVATE)
-        val editor = prefs.edit()
-        editor.remove(KEY_REMAINING_TIME)
-        editor.remove(KEY_TASK_ID)
-        editor.apply()
-    }
-
-    // НОВЫЙ МЕТОД: ВИБРАЦИЯ ПРИ ЗАВЕРШЕНИИ
-    private fun vibrateOnCompletion() {
-        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator?
-        if (vibrator?.hasVibrator() == true) {
-            try {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    vibrator.vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE))
-                } else {
-                    @Suppress("DEPRECATION")
-                    vibrator.vibrate(1000)
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
+        AlertDialog.Builder(this)
+            .setTitle("Пропустить перерыв?")
+            .setMessage("Вы уверены, что хотите пропустить перерыв и продолжить работу?")
+            .setPositiveButton("Да, продолжить") { _, _ ->
+                // Пропускаем перерыв и начинаем рабочий блок
+                // Воспроизводим звук начала работы
+                playSound(R.raw.alert)
+                startWorkBlock()
             }
-        }
+            .setNegativeButton("Нет, остаться") { _, _ ->
+                resumeTimer()
+            }
+            .setCancelable(false)
+            .show()
     }
 
-    // НОВЫЙ МЕТОД: ОТМЕТКА ЗАДАЧИ КАК ВЫПОЛНЕННОЙ
-    private fun markTaskAsCompleted() {
-        selectedTask?.let { task ->
-            // Отмечаем задачу как выполненную
-            val updatedTask = task.copy(
-                isCompleted = true,
-                time = "" // Очищаем время, так как задача выполнена
-            )
-            taskManager.updateTask(updatedTask)
-
-            // Можно добавить логирование времени завершения (опционально)
-            logCompletionTime(task.id)
-        }
-    }
-
-    // ОПЦИОНАЛЬНО: Запись времени завершения
-    private fun logCompletionTime(taskId: String) {
-        val sdf = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-        val completionTime = sdf.format(Date())
-
-        // Сохраняем в SharedPreferences или базе данных
-        val prefs = getSharedPreferences("task_completions", MODE_PRIVATE)
-        val editor = prefs.edit()
-        editor.putString(taskId, completionTime)
-        editor.apply()
-    }
-
-    private fun showCancelDialog() {
+    private fun showCancelFocusDialog() {
         pauseTimer()
 
         val dialogView = layoutInflater.inflate(R.layout.dialog_cancel_focus, null)
@@ -238,26 +357,143 @@ class FocusWindowActivity : AppCompatActivity() {
         layoutCancelButton.setOnClickListener {
             dialog.dismiss()
             stopTimer()
-
-            // Обновляем время в задаче (сохраняем оставшееся)
             updateTaskTime()
-
-            // Возвращаемся на MainActivity
-            val intent = Intent(this, MainActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(intent)
-            finish()
+            returnToMain()
         }
 
         dialog.show()
     }
 
-    // НОВЫЙ МЕТОД: ДИАЛОГ ЗАВЕРШЕНИЯ ФОКУСА (используем ваш XML)
+    // Метод для воспроизведения звука
+    private fun playSound(soundResourceId: Int) {
+        try {
+            // Освобождаем предыдущий MediaPlayer, если он есть
+            mediaPlayer?.release()
+
+            // Создаем новый MediaPlayer
+            mediaPlayer = MediaPlayer.create(this, soundResourceId)
+
+            // Настраиваем слушатель для освобождения ресурсов после завершения
+            mediaPlayer?.setOnCompletionListener {
+                it.release()
+                mediaPlayer = null
+            }
+
+            // Устанавливаем громкость (50% от максимальной)
+            mediaPlayer?.setVolume(0.5f, 0.5f)
+
+            // Запускаем воспроизведение
+            mediaPlayer?.start()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // В случае ошибки просто игнорируем
+        }
+    }
+
+    private fun pauseTimer() {
+        countDownTimer?.cancel()
+        isTimerRunning = false
+        saveTimerState()
+    }
+
+    private fun resumeTimer() {
+        if (remainingTimeMillis > 0 && !isTimerRunning) {
+            startTimer()
+        }
+    }
+
+    private fun stopTimer() {
+        countDownTimer?.cancel()
+        isTimerRunning = false
+        clearTimerState()
+    }
+
+    private fun updateTimerDisplay(millis: Long) {
+        val minutes = (millis / 1000) / 60
+        val seconds = (millis / 1000) % 60
+        val displayText = String.format("%02d:%02d", minutes, seconds)
+
+        labelFocusTimer.text = displayText
+
+        // Меняем цвет в последнюю минуту рабочего блока
+        if (!isBreakTime) {
+            val newLastMinute = (millis <= 60000 && millis > 0)
+            if (newLastMinute != isLastMinute) {
+                isLastMinute = newLastMinute
+                if (isLastMinute) {
+                    labelFocusTimer.setTextColor(Color.RED)
+                } else if (millis > 60000) {
+                    labelFocusTimer.setTextColor(Color.WHITE)
+                }
+            }
+        }
+    }
+
+    private fun saveTimerState() {
+        val prefs = getSharedPreferences(PREFS_FOCUS, MODE_PRIVATE)
+        prefs.edit().apply {
+            putLong(KEY_REMAINING_TIME, remainingTimeMillis)
+            putLong(KEY_CURRENT_BLOCK_TIME, currentBlockTimeMillis)
+            putLong(KEY_TOTAL_FOCUS_TIME, totalFocusTimeMillis)
+            putString(KEY_TASK_ID, selectedTask?.id)
+            putBoolean(KEY_IS_BREAK, isBreakTime)
+            putInt(KEY_CURRENT_BLOCK, currentBlock)
+            apply()
+        }
+    }
+
+    private fun clearTimerState() {
+        val prefs = getSharedPreferences(PREFS_FOCUS, MODE_PRIVATE)
+        prefs.edit().apply {
+            remove(KEY_REMAINING_TIME)
+            remove(KEY_CURRENT_BLOCK_TIME)
+            remove(KEY_TOTAL_FOCUS_TIME)
+            remove(KEY_TASK_ID)
+            remove(KEY_IS_BREAK)
+            remove(KEY_CURRENT_BLOCK)
+            apply()
+        }
+    }
+
+    private fun vibrateOnCompletion() {
+        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator?
+        if (vibrator?.hasVibrator() == true) {
+            try {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    vibrator.vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE))
+                } else {
+                    @Suppress("DEPRECATION")
+                    vibrator.vibrate(1000)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun markTaskAsCompleted() {
+        selectedTask?.let { task ->
+            val updatedTask = task.copy(
+                isCompleted = true,
+                time = ""
+            )
+            taskManager.updateTask(updatedTask)
+            logCompletionTime(task.id)
+        }
+    }
+
+    private fun logCompletionTime(taskId: String) {
+        val sdf = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+        val completionTime = sdf.format(Date())
+        val prefs = getSharedPreferences("task_completions", MODE_PRIVATE)
+        prefs.edit().putString(taskId, completionTime).apply()
+    }
+
     private fun showFocusCompletedDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_focus_completed, null)
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
-            .setCancelable(false) // Нельзя закрыть нажатием вне диалога
+            .setCancelable(false)
             .create()
 
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
@@ -274,13 +510,20 @@ class FocusWindowActivity : AppCompatActivity() {
 
     private fun updateTaskTime() {
         selectedTask?.let { task ->
-            // Преобразуем оставшееся время обратно в формат HH:mm
-            val minutes = (remainingTimeMillis / 1000) / 60
-            val seconds = (remainingTimeMillis / 1000) % 60
+            // Рассчитываем оставшееся общее время
+            val remainingWorkBlocks = totalBlocks - currentBlock
+            val remainingWorkTime = if (isBreakTime) {
+                // Если сейчас перерыв, оставшееся время = оставшиеся рабочие блоки + текущий перерыв
+                (remainingWorkBlocks * workBlockDuration * 60 * 1000L) + remainingTimeMillis
+            } else {
+                // Если сейчас рабочий блок, оставшееся время = оставшиеся рабочие блоки + перерывы между ними
+                val remainingBreaks = remainingWorkBlocks - 1
+                (remainingWorkBlocks * workBlockDuration * 60 * 1000L) + (remainingBreaks * breakDuration * 60 * 1000L) + remainingTimeMillis
+            }
 
-            val newTime = String.format("%02d:%02d", minutes, seconds)
+            val totalMinutes = (remainingWorkTime / 1000 / 60).toInt()
+            val newTime = String.format("%02d:00", totalMinutes)
 
-            // Создаем обновленную задачу (не помечаем как выполненную, только обновляем время)
             val updatedTask = task.copy(time = newTime)
             taskManager.updateTask(updatedTask)
         }
@@ -295,7 +538,6 @@ class FocusWindowActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Автоматически запускаем таймер при открытии активности
         if (!isTimerRunning && remainingTimeMillis > 0) {
             startTimer()
         }
@@ -309,5 +551,8 @@ class FocusWindowActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         countDownTimer?.cancel()
+        // Освобождаем MediaPlayer при уничтожении активности
+        mediaPlayer?.release()
+        mediaPlayer = null
     }
 }
