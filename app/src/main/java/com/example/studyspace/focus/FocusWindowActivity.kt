@@ -87,7 +87,7 @@ class FocusWindowActivity : AppCompatActivity() {
         }
 
         initViews(taskTitle ?: "Задача")
-        calculateDurations(taskTime ?: "60:00")
+        calculateDurations(taskTime ?: "00:25:00")
         loadAndSetupTimer()
         setupListeners()
     }
@@ -95,34 +95,126 @@ class FocusWindowActivity : AppCompatActivity() {
     private fun initViews(taskTitle: String) {
         labelNameOfTask.text = taskTitle
         labelFocusTimer.setTextColor(Color.WHITE)
+
+        // Получаем время из Intent и отображаем его
+        val taskTime = intent.getStringExtra(EXTRA_TASK_TIME)
+        if (!taskTime.isNullOrEmpty()) {
+            // Отображаем время в формате ЧЧ:ММ:СС
+            val formattedTime = formatTimeForDisplay(taskTime)
+            labelFocusTimer.text = formattedTime
+        }
+    }
+
+    private fun formatTimeForDisplay(timeString: String): String {
+        val timeParts = timeString.split(":")
+        return when (timeParts.size) {
+            3 -> timeString // Уже в формате ЧЧ:ММ:СС
+            2 -> {
+                // Формат ЧЧ:ММ или ММ:СС
+                val first = timeParts[0].toIntOrNull() ?: 0
+                val second = timeParts[1].toIntOrNull() ?: 0
+                if (first < 24 && second < 60) {
+                    // ЧЧ:ММ -> добавляем секунды
+                    "$timeString:00"
+                } else {
+                    // ММ:СС -> добавляем часы
+                    String.format("00:%02d:%02d", first, second)
+                }
+            }
+            else -> "00:25:00"
+        }
     }
 
     private fun calculateDurations(totalTimeString: String) {
         // Преобразуем общее время фокуса в минуты
+        // Формат: "ЧЧ:ММ:СС" или "ЧЧ:ММ" или "ММ:СС"
         val timeParts = totalTimeString.split(":")
-        val totalMinutes = timeParts.getOrNull(0)?.toIntOrNull() ?: 60
 
-        // Настраиваем параметры в зависимости от возраста
-        when {
-            userAge <= 12 -> { // Дети
-                breakDuration = 3 // 3 минуты перерыв
-                totalBlocks = if (totalMinutes <= 30) 2 else 3
+        var totalMinutes = 25 // Значение по умолчанию
+
+        when (timeParts.size) {
+            3 -> {
+                // Формат "ЧЧ:ММ:СС" (например, 01:30:00 = 1 час 30 минут = 90 минут)
+                val hours = timeParts[0].toIntOrNull() ?: 0
+                val minutes = timeParts[1].toIntOrNull() ?: 0
+                val seconds = timeParts[2].toIntOrNull() ?: 0
+                totalMinutes = hours * 60 + minutes
+                // Секунды игнорируем при расчете блоков
             }
-            userAge <= 18 -> { // Подростки
-                breakDuration = 5 // 5 минут перерыв
-                totalBlocks = if (totalMinutes <= 45) 2 else 3
+            2 -> {
+                // Формат "ЧЧ:ММ" или "ММ:СС"
+                val firstPart = timeParts[0].toIntOrNull() ?: 0
+                val secondPart = timeParts[1].toIntOrNull() ?: 0
+
+                // Если первая часть меньше 24, а вторая меньше 60, то это ЧЧ:ММ
+                if (firstPart < 24 && secondPart < 60) {
+                    // Формат ЧЧ:ММ (например, 01:30 = 1 час 30 минут = 90 минут)
+                    totalMinutes = firstPart * 60 + secondPart
+                } else {
+                    // Формат ММ:СС (например, 90:00 = 90 минут)
+                    totalMinutes = firstPart
+                }
             }
-            else -> { // Взрослые
-                breakDuration = 5 // 5 минут перерыв
-                totalBlocks = if (totalMinutes <= 60) 3 else 4
+            else -> {
+                totalMinutes = 25 // Значение по умолчанию
             }
         }
 
-        // Рассчитываем длительность рабочего блока
-        // Общее время минус перерывы, деленное на количество рабочих блоков
-        val totalBreakTime = breakDuration * (totalBlocks - 1) // Перерывы между блоками
-        val totalWorkTime = totalMinutes - totalBreakTime
-        workBlockDuration = if (totalBlocks > 0) totalWorkTime / totalBlocks else totalMinutes
+        println("DEBUG: Общее время в минутах: $totalMinutes")
+
+        // Определяем разумное количество блоков и длительность перерыва
+        when {
+            totalMinutes <= 5 -> {
+                // Для очень коротких сессий (до 5 минут) - без перерывов
+                totalBlocks = 1
+                breakDuration = 0
+                workBlockDuration = totalMinutes
+            }
+            totalMinutes <= 15 -> {
+                // Для коротких сессий (5-15 минут) - 1 перерыв
+                totalBlocks = 2
+                breakDuration = 1 // 1 минута перерыва
+                val totalBreakTime = breakDuration * (totalBlocks - 1)
+                workBlockDuration = if (totalBlocks > 0) (totalMinutes - totalBreakTime) / totalBlocks else totalMinutes
+            }
+            totalMinutes <= 30 -> {
+                // Для средних сессий (15-30 минут) - 1-2 перерыва
+                totalBlocks = 2
+                breakDuration = 2 // 2 минуты перерыва
+                val totalBreakTime = breakDuration * (totalBlocks - 1)
+                workBlockDuration = if (totalBlocks > 0) (totalMinutes - totalBreakTime) / totalBlocks else totalMinutes
+            }
+            totalMinutes <= 60 -> {
+                // Для длинных сессий (30-60 минут) - 2-3 перерыва
+                totalBlocks = 3
+                breakDuration = 3 // 3 минуты перерыва
+                val totalBreakTime = breakDuration * (totalBlocks - 1)
+                workBlockDuration = if (totalBlocks > 0) (totalMinutes - totalBreakTime) / totalBlocks else totalMinutes
+            }
+            else -> {
+                // Для очень длинных сессий (более 60 минут) - максимум 4 блока
+                totalBlocks = 4
+                breakDuration = 5 // 5 минут перерыва
+                val totalBreakTime = breakDuration * (totalBlocks - 1)
+                workBlockDuration = if (totalBlocks > 0) (totalMinutes - totalBreakTime) / totalBlocks else totalMinutes
+            }
+        }
+
+        // Гарантируем минимальную длительность рабочего блока в 1 минуту
+        if (workBlockDuration < 1) {
+            workBlockDuration = 1
+        }
+
+        // Гарантируем, что общее время работы + перерывов не превышает заданное время
+        val totalCalculatedTime = (workBlockDuration * totalBlocks) + (breakDuration * (totalBlocks - 1))
+        if (totalCalculatedTime > totalMinutes) {
+            // Корректируем: уменьшаем длительность рабочих блоков
+            val availableWorkTime = totalMinutes - (breakDuration * (totalBlocks - 1))
+            workBlockDuration = if (totalBlocks > 0) availableWorkTime / totalBlocks else totalMinutes
+            if (workBlockDuration < 1) workBlockDuration = 1
+        }
+
+        println("DEBUG: Блоков: $totalBlocks, Работа: $workBlockDuration мин, Перерыв: $breakDuration мин")
 
         // Конвертируем в миллисекунды
         totalFocusTimeMillis = totalMinutes * 60 * 1000L
@@ -170,6 +262,13 @@ class FocusWindowActivity : AppCompatActivity() {
         isBreakTime = false
         currentBlockTimeMillis = workBlockDuration * 60 * 1000L
         remainingTimeMillis = currentBlockTimeMillis
+
+        // Проверяем, что время блока не отрицательное
+        if (currentBlockTimeMillis <= 0) {
+            currentBlockTimeMillis = 60000L // Минимум 1 минута
+            remainingTimeMillis = currentBlockTimeMillis
+        }
+
         setupWorkBlock()
         updateTimerDisplay(remainingTimeMillis)
         saveTimerState()
@@ -409,9 +508,21 @@ class FocusWindowActivity : AppCompatActivity() {
     }
 
     private fun updateTimerDisplay(millis: Long) {
-        val minutes = (millis / 1000) / 60
-        val seconds = (millis / 1000) % 60
-        val displayText = String.format("%02d:%02d", minutes, seconds)
+        val totalSeconds = millis / 1000
+        val hours = totalSeconds / 3600
+        val minutes = (totalSeconds % 3600) / 60
+        val seconds = totalSeconds % 60
+
+        // Не даем времени быть отрицательным
+        val safeHours = if (hours < 0) 0 else hours
+        val safeMinutes = if (minutes < 0) 0 else minutes
+        val safeSeconds = if (seconds < 0) 0 else seconds
+
+        val displayText = if (safeHours > 0) {
+            String.format("%02d:%02d:%02d", safeHours, safeMinutes, safeSeconds)
+        } else {
+            String.format("%02d:%02d", safeMinutes, safeSeconds)
+        }
 
         labelFocusTimer.text = displayText
 
@@ -475,7 +586,7 @@ class FocusWindowActivity : AppCompatActivity() {
         selectedTask?.let { task ->
             val updatedTask = task.copy(
                 isCompleted = true,
-                time = ""
+                time = "00:00:00"
             )
             taskManager.updateTask(updatedTask)
             logCompletionTime(task.id)
@@ -510,22 +621,59 @@ class FocusWindowActivity : AppCompatActivity() {
 
     private fun updateTaskTime() {
         selectedTask?.let { task ->
-            // Рассчитываем оставшееся общее время
-            val remainingWorkBlocks = totalBlocks - currentBlock
-            val remainingWorkTime = if (isBreakTime) {
-                // Если сейчас перерыв, оставшееся время = оставшиеся рабочие блоки + текущий перерыв
-                (remainingWorkBlocks * workBlockDuration * 60 * 1000L) + remainingTimeMillis
-            } else {
-                // Если сейчас рабочий блок, оставшееся время = оставшиеся рабочие блоки + перерывы между ними
-                val remainingBreaks = remainingWorkBlocks - 1
-                (remainingWorkBlocks * workBlockDuration * 60 * 1000L) + (remainingBreaks * breakDuration * 60 * 1000L) + remainingTimeMillis
+            // Если фокус завершен полностью, оставляем 00:00:00
+            if (currentBlock >= totalBlocks) {
+                val updatedTask = task.copy(time = "00:00:00")
+                taskManager.updateTask(updatedTask)
+                return
             }
 
-            val totalMinutes = (remainingWorkTime / 1000 / 60).toInt()
-            val newTime = String.format("%02d:00", totalMinutes)
+            // Если сейчас рабочий блок, который мы прервали
+            if (!isBreakTime) {
+                // Преобразуем оставшееся время в секунды
+                val remainingSeconds = remainingTimeMillis / 1000
 
-            val updatedTask = task.copy(time = newTime)
-            taskManager.updateTask(updatedTask)
+                // Плюс все будущие блоки и перерывы
+                val futureWorkBlocks = totalBlocks - currentBlock - 1 // оставшиеся после текущего
+                val futureWorkTime = futureWorkBlocks * workBlockDuration * 60 // в секундах
+                val futureBreaks = futureWorkBlocks // перерывы между будущими блоками
+                val futureBreakTime = futureBreaks * breakDuration * 60 // в секундах
+
+                // Общее оставшееся время в секундах
+                val totalSeconds = remainingSeconds + futureWorkTime + futureBreakTime
+
+                // Конвертируем в формат ЧЧ:ММ:СС
+                val hours = totalSeconds / 3600
+                val minutes = (totalSeconds % 3600) / 60
+                val seconds = totalSeconds % 60
+
+                val newTime = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+
+                val updatedTask = task.copy(time = newTime)
+                taskManager.updateTask(updatedTask)
+            } else {
+                // Если сейчас перерыв, который мы прервали
+                // Оставшееся время перерыва + все будущие рабочие блоки и перерывы
+                val remainingBreakSeconds = remainingTimeMillis / 1000
+
+                val futureWorkBlocks = totalBlocks - currentBlock // оставшиеся рабочие блоки
+                val futureWorkTime = futureWorkBlocks * workBlockDuration * 60 // в секундах
+                val futureBreaks = futureWorkBlocks - 1 // перерывы между будущими блоками
+                val futureBreakTime = futureBreaks * breakDuration * 60 // в секундах
+
+                // Общее оставшееся время в секундах
+                val totalSeconds = remainingBreakSeconds + futureWorkTime + futureBreakTime
+
+                // Конвертируем в формат ЧЧ:ММ:СС
+                val hours = totalSeconds / 3600
+                val minutes = (totalSeconds % 3600) / 60
+                val seconds = totalSeconds % 60
+
+                val newTime = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+
+                val updatedTask = task.copy(time = newTime)
+                taskManager.updateTask(updatedTask)
+            }
         }
     }
 

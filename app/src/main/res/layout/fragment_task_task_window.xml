@@ -30,17 +30,18 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
                 android:layout_gravity="start|center_vertical"
                 android:fontFamily="@font/montserrat"
                 android:text="Название задачи"
                 android:textColor="#FFFFFF"
-                android:textSize="16sp"
+                android:textSize="17sp"
                 android:layout_weight="1"/>
 
             <ImageView
                 android:id="@+id/imageForRedactTask"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
                 android:layout_gravity="end|center_vertical"
                 android:layout_marginEnd="16dp"
                 android:layout_weight="0"

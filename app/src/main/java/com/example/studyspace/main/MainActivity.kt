@@ -236,9 +236,10 @@ class MainActivity : AppCompatActivity() {
         // Устанавливаем название задачи
         taskNameLabel.text = task.title
 
-        // Если есть время, добавляем его к названию
+        // Если есть время, добавляем его к названию в формате ЧЧ:ММ:СС
         val taskText = if (task.time.isNotEmpty()) {
-            "${task.title} (${task.time})"
+            val displayTime = formatTimeForDisplay(task.time)
+            "${task.title} ($displayTime)"
         } else {
             task.title
         }
@@ -269,6 +270,29 @@ class MainActivity : AppCompatActivity() {
         return taskView
     }
 
+    private fun formatTimeForDisplay(timeString: String): String {
+        return when {
+            timeString.matches(Regex("^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$")) -> {
+                // Формат ЧЧ:ММ:СС
+                timeString
+            }
+            timeString.matches(Regex("^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")) -> {
+                // Формат ЧЧ:ММ -> добавляем секунды
+                "$timeString:00"
+            }
+            timeString.matches(Regex("^[0-9]{1,3}:[0-5][0-9]$")) -> {
+                // Формат ММ:СС -> преобразуем в ЧЧ:ММ:СС
+                val parts = timeString.split(":")
+                val minutes = parts[0].toIntOrNull() ?: 0
+                val seconds = parts[1].toIntOrNull() ?: 0
+                val hours = minutes / 60
+                val remainingMinutes = minutes % 60
+                String.format("%02d:%02d:%02d", hours, remainingMinutes, seconds)
+            }
+            else -> "00:25:00"
+        }
+    }
+
     private fun uncheckOtherCheckboxes(currentCheckBox: CheckBox) {
         // Проходим по всем чекбоксам в контейнере
         for (i in 0 until scrollContainer.childCount) {
@@ -284,11 +308,11 @@ class MainActivity : AppCompatActivity() {
         if (selectedTask != null) {
             labelNameOfTask.text = selectedTask?.title ?: "Название задачи"
 
-            // Форматируем время для таймера
+            // Форматируем время для таймера в формате ЧЧ:ММ:СС
             val timeText = if (selectedTask?.time?.isNotEmpty() == true) {
-                selectedTask?.time ?: "25:00"
+                formatTimeForDisplay(selectedTask?.time ?: "00:25:00")
             } else {
-                "25:00" // Значение по умолчанию если время не задано
+                "00:25:00" // Значение по умолчанию если время не задано
             }
             labelFocusTimer.text = timeText
 
@@ -297,7 +321,7 @@ class MainActivity : AppCompatActivity() {
             textNextButton.text = "Старт фокуса"
         } else {
             labelNameOfTask.text = "Нет текущих сессий"
-            labelFocusTimer.text = "--:--"
+            labelFocusTimer.text = "--:--:--"
 
             // Обновляем текст кнопки
             val textNextButton = findViewById<TextView>(R.id.textNextButton)
@@ -308,7 +332,11 @@ class MainActivity : AppCompatActivity() {
     private fun startFocusSession() {
         if (selectedTask != null) {
             val task = selectedTask!!
-            val time = selectedTask?.time ?: "25:00"
+            val time = if (selectedTask?.time?.isNotEmpty() == true) {
+                formatTimeForFocusWindow(selectedTask?.time ?: "00:25:00")
+            } else {
+                "00:25:00"
+            }
 
             val intent = Intent(this, com.example.studyspace.focus.FocusWindowActivity::class.java).apply {
                 putExtra(com.example.studyspace.focus.FocusWindowActivity.EXTRA_TASK_ID, task.id)
@@ -318,6 +346,27 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         } else {
             Toast.makeText(this, "Выберите задачу для фокуса", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun formatTimeForFocusWindow(timeString: String): String {
+        // Обеспечиваем, что время передается в формате ЧЧ:ММ:СС
+        return when {
+            timeString.matches(Regex("^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$")) -> {
+                timeString
+            }
+            timeString.matches(Regex("^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")) -> {
+                "$timeString:00"
+            }
+            timeString.matches(Regex("^[0-9]{1,3}:[0-5][0-9]$")) -> {
+                val parts = timeString.split(":")
+                val minutes = parts[0].toIntOrNull() ?: 25
+                val seconds = parts[1].toIntOrNull() ?: 0
+                val hours = minutes / 60
+                val remainingMinutes = minutes % 60
+                String.format("%02d:%02d:%02d", hours, remainingMinutes, seconds)
+            }
+            else -> "00:25:00"
         }
     }
 
