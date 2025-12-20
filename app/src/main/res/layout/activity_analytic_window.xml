@@ -8,10 +8,10 @@
     <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginBottom="70dp"
-        app:layout_constraintBottom_toTopOf="@+id/layoutForButtons"
+        android:layout_marginBottom="5dp"
         android:overScrollMode="never"
         android:scrollbars="none"
+        app:layout_constraintBottom_toTopOf="@+id/layoutForButtons"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -20,21 +20,453 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:gravity="center_horizontal">
+            android:padding="16dp">
 
+            <!-- Заголовок -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="45dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="20dp"
                 android:fontFamily="@font/montserrat_semibold"
                 android:text="Аналитика"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp" />
 
-        </LinearLayout>
+            <!-- Календарь стриков (как в Duolingo) -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:cardBackgroundColor="#2D2D2D"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- Заголовок календаря -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginBottom="12dp"
+                        android:fontFamily="@font/montserrat_semibold"
+                        android:text="Календарь фокуса"
+                        android:textColor="#FFFFFF"
+                        android:textSize="17sp" />
+
+                    <!-- Навигация по месяцам -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp">
+
+                        <ImageView
+                            android:id="@+id/btnPrevMonth"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_alignParentStart="true"
+                            android:layout_centerVertical="true"
+                            android:src="@drawable/ic_arrow_left"/>
+
+                        <TextView
+                            android:id="@+id/tvMonthTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerInParent="true"
+                            android:fontFamily="@font/montserrat_medium"
+                            android:text="Дата"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp" />
+
+                        <ImageView
+                            android:id="@+id/btnNextMonth"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:src="@drawable/ic_arrow_right" />
+
+                    </RelativeLayout>
+
+                    <!-- Дни недели -->
+                    <LinearLayout
+                        android:id="@+id/weekDaysContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp" />
+
+                    <!-- Календарь -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recyclerViewCalendar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:overScrollMode="never" />
+
+                    <!-- Легенда календаря -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal"
+                        android:gravity="center">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="12dp"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <View
+                                android:layout_width="8dp"
+                                android:layout_height="8dp"
+                                android:layout_marginEnd="4dp"
+                                android:background="@drawable/day_indicator_focus" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/montserrat_light"
+                                android:text="Был в фокусе"
+                                android:textColor="#CCCCCC"
+                                android:textSize="10sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="12dp"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <View
+                                android:layout_width="8dp"
+                                android:layout_height="8dp"
+                                android:layout_marginEnd="4dp"
+                                android:background="@drawable/day_indicator_streak" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/montserrat_light"
+                                android:text="Стрик"
+                                android:textColor="#CCCCCC"
+                                android:textSize="10sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                android:text="●"
+                                android:textColor="#4CAF50"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/montserrat_light"
+                                android:text="Сегодня"
+                                android:textColor="#CCCCCC"
+                                android:textSize="10sp" />
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Блок статистики -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="#2D2D2D"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:fontFamily="@font/montserrat_medium"
+                        android:text="Статистика за текущий месяц"
+                        android:textColor="#FFFFFF"
+                        android:textSize="18sp" />
+
+                    <!-- 1. Общее время в фокусе -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/montserrat"
+                            android:text="Общее время в фокусе:"
+                            android:textColor="#CCCCCC"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/tvTotalFocusTime"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/montserrat_medium"
+                            android:text="0ч 0м"
+                            android:textColor="#FFFFFF"
+                            android:textSize="16sp" />
+                    </LinearLayout>
+
+                    <!-- 2. Количество завершенных сессий -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/montserrat"
+                            android:text="Завершенных сессий:"
+                            android:textColor="#CCCCCC"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/tvCompletedSessions"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/montserrat_medium"
+                            android:text="0"
+                            android:textColor="#FFFFFF"
+                            android:textSize="16sp" />
+                    </LinearLayout>
+
+                    <!-- 3. Самая длинная сессия -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/montserrat"
+                            android:text="Самая длинная сессия:"
+                            android:textColor="#CCCCCC"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/tvLongestSession"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/montserrat_medium"
+                            android:text="0 мин"
+                            android:textColor="#FFFFFF"
+                            android:textSize="16sp" />
+                    </LinearLayout>
+
+                    <!-- 4. Максимальная продуктивность в сутки -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/montserrat"
+                            android:text="Макс. продуктивность в день:"
+                            android:textColor="#CCCCCC"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/tvMaxDailyFocus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/montserrat_medium"
+                            android:text="0ч 0м"
+                            android:textColor="#FFFFFF"
+                            android:textSize="16sp" />
+                    </LinearLayout>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Блок прогресса и стриков -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="#2D2D2D"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:fontFamily="@font/montserrat_semibold"
+                        android:text="Прогресс"
+                        android:textColor="#FFFFFF"
+                        android:textSize="18sp" />
+
+                    <!-- 5. Текущий стрик -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/montserrat"
+                            android:text="Текущий стрик:"
+                            android:textColor="#CCCCCC"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/tvCurrentStreak"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/montserrat_medium"
+                            android:text="0 дней"
+                            android:textColor="#4CAF50"
+                            android:textSize="16sp" />
+                    </LinearLayout>
+
+                    <!-- 6. Самый длинный стрик -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/montserrat"
+                            android:text="Самый длинный стрик:"
+                            android:textColor="#CCCCCC"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/tvLongestStreak"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/montserrat_medium"
+                            android:text="0 дней"
+                            android:textColor="#FFFFFF"
+                            android:textSize="16sp" />
+                    </LinearLayout>
+
+                    <!-- 7. Процент выполненных задач -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/montserrat"
+                            android:text="Выполнено задач:"
+                            android:textColor="#CCCCCC"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/tvTaskCompletionRate"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/montserrat_medium"
+                            android:text="0%"
+                            android:textColor="#FFFFFF"
+                            android:textSize="16sp" />
+                    </LinearLayout>
+
+                    <!-- 8. Просроченные задачи -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/montserrat"
+                            android:text="Просрочено задач:"
+                            android:textColor="#CCCCCC"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/tvOverdueTasks"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/montserrat_medium"
+                            android:text="0"
+                            android:textColor="#FF5252"
+                            android:textSize="16sp" />
+                    </LinearLayout>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Подсказка -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="20dp"
+                android:fontFamily="@font/montserrat_light"
+                android:text="Статистика обновляется автоматически\nпосле каждой сессии фокуса"
+                android:textAlignment="center"
+                android:textColor="#888888"
+                android:textSize="14sp" />
+
+        </LinearLayout>
     </ScrollView>
 
+    <!-- Нижняя панель навигации -->
     <FrameLayout
         android:id="@+id/layoutForButtons"
         android:layout_width="0dp"

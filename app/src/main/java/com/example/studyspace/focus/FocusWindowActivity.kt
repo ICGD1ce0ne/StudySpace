@@ -17,9 +17,14 @@ import com.example.studyspace.R
 import com.example.studyspace.main.MainActivity
 import com.example.studyspace.task.models.Task
 import com.example.studyspace.task.models.TaskManager
+
+import com.example.studyspace.task.models.FocusSession
+import com.example.studyspace.task.models.StatsManager
+
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
 
 class FocusWindowActivity : AppCompatActivity() {
 
@@ -58,6 +63,8 @@ class FocusWindowActivity : AppCompatActivity() {
         const val KEY_CURRENT_BLOCK = "current_block"
         const val KEY_TOTAL_FOCUS_TIME = "total_focus_time"
         const val KEY_CURRENT_BLOCK_TIME = "current_block_time"
+        const val EXTRA_SESSION_DURATION = "extra_session_duration"
+        const val EXTRA_SESSION_COMPLETED = "extra_session_completed"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -220,6 +227,29 @@ class FocusWindowActivity : AppCompatActivity() {
         totalFocusTimeMillis = totalMinutes * 60 * 1000L
     }
 
+    private fun saveFocusSession(duration: Long, isCompleted: Boolean) {
+        val statsManager = StatsManager(this)
+
+        val session = FocusSession(
+            id = UUID.randomUUID().toString(),
+            startTime = System.currentTimeMillis() - duration,
+            duration = duration,
+            isCompleted = isCompleted,
+            taskId = selectedTask?.id
+        )
+
+        statsManager.saveSession(session)
+
+        // Обновляем статистику выполненных задач
+        if (isCompleted) {
+            val today = Task.getTodayDate()
+            val taskManager = TaskManager(this)
+            val todayTasks = taskManager.getTodayTasks()
+            val completedToday = todayTasks.count { it.isCompleted }
+            statsManager.updateCompletedTasks(today, completedToday)
+        }
+    }
+
     private fun loadAndSetupTimer() {
         val prefs = getSharedPreferences(PREFS_FOCUS, MODE_PRIVATE)
         val savedTaskId = prefs.getString(KEY_TASK_ID, null)
@@ -372,6 +402,10 @@ class FocusWindowActivity : AppCompatActivity() {
         playSound(R.raw.alert)
         markTaskAsCompleted()
         clearTimerState()
+
+        val sessionDuration = totalFocusTimeMillis - remainingTimeMillis
+        saveFocusSession(sessionDuration, true)
+
         showFocusCompletedDialog()
     }
 
@@ -613,6 +647,10 @@ class FocusWindowActivity : AppCompatActivity() {
 
         layoutBackToMainButton.setOnClickListener {
             dialog.dismiss()
+
+            val sessionDuration = totalFocusTimeMillis - remainingTimeMillis
+            saveFocusSession(sessionDuration, false)
+
             returnToMain()
         }
 

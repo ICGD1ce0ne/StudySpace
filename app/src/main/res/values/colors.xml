@@ -2,4 +2,98 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Основные цвета приложения -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+
+    <!-- Цвета темы -->
+    <color name="background_dark">#1A1A1A</color>
+    <color name="card_dark">#2D2D2D</color>
+
+    <!-- Основные цвета -->
+    <color name="green">#4CAF50</color>
+    <color name="green_light">#8BC34A</color>
+    <color name="green_dark">#388E3C</color>
+
+    <color name="blue">#2196F3</color>
+    <color name="blue_light">#03A9F4</color>
+    <color name="blue_dark">#1976D2</color>
+
+    <!-- Цвета аналитики -->
+    <color name="yellow">#FFC107</color>
+    <color name="yellow_light">#FFEB3B</color>
+    <color name="yellow_dark">#FFA000</color>
+
+    <color name="orange">#FF9800</color>
+    <color name="orange_light">#FFB74D</color>
+    <color name="orange_dark">#F57C00</color>
+
+    <!-- КРАСНЫЕ цвета (от светлых к темным) -->
+    <color name="red">#F44336</color>
+    <color name="red_light">#FF5252</color>
+    <color name="red_lighter">#FF8A80</color>
+    <color name="red_dark">#D32F2F</color>
+    <color name="red_darker">#B71C1C</color>
+    <color name="pink">#E91E63</color>
+
+    <!-- СЕРЫЕ цвета (от светлых к темным) -->
+    <color name="gray_50">#FAFAFA</color>
+    <color name="gray_100">#F5F5F5</color>
+    <color name="gray_200">#EEEEEE</color>
+    <color name="gray_300">#E0E0E0</color>
+    <color name="gray_400">#BDBDBD</color>
+    <color name="gray_500">#9E9E9E</color>
+    <color name="gray_600">#757575</color>
+    <color name="gray_700">#616161</color>
+    <color name="gray_800">#424242</color>
+    <color name="gray_850">#303030</color>
+    <color name="gray_900">#212121</color>
+    <color name="gray_950">#121212</color>
+
+    <!-- Дополнительные серые для удобства -->
+    <color name="light_gray">#CCCCCC</color>
+    <color name="medium_gray">#888888</color>
+    <color name="dark_gray">#2D2D2D</color>
+
+    <!-- Градиентные цвета для прогресса -->
+    <color name="gradient_start">#4CAF50</color>
+    <color name="gradient_middle">#FFC107</color>
+    <color name="gradient_end">#F44336</color>
+
+    <!-- Цвета для календаря -->
+    <color name="calendar_today">#4CAF50</color>
+    <color name="calendar_streak">#4CAF50</color>
+    <color name="calendar_focus">#FFC107</color>
+    <color name="calendar_empty">#424242</color>
+    <color name="calendar_text">#FFFFFF</color>
+    <color name="calendar_text_dimmed">#CCCCCC</color>
+    <color name="calendar_weekend">#FF5252</color>
+
+    <!-- Цвета для статистики -->
+    <color name="stat_good">#4CAF50</color>
+    <color name="stat_average">#FFC107</color>
+    <color name="stat_bad">#F44336</color>
+    <color name="stat_neutral">#9E9E9E</color>
+
+    <!-- Цвета для задач -->
+    <color name="task_completed">#4CAF50</color>
+    <color name="task_pending">#FFC107</color>
+    <color name="task_overdue">#F44336</color>
+    <color name="task_normal">#2196F3</color>
+
+    <!-- Цвета для фокуса/таймера -->
+    <color name="focus_work">#2196F3</color>
+    <color name="focus_break">#4CAF50</color>
+    <color name="focus_last_minute">#F44336</color>
+    <color name="focus_paused">#FFC107</color>
+
+    <!-- Акцентные цвета -->
+    <color name="accent_primary">#4CAF50</color>
+    <color name="accent_secondary">#2196F3</color>
+    <color name="accent_warning">#FFC107</color>
+    <color name="accent_danger">#F44336</color>
 </resources>
