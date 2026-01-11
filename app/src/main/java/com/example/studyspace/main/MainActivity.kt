@@ -137,10 +137,22 @@ class MainActivity : AppCompatActivity() {
             // Группируем задачи по датам
             val groupedTasks = groupTasksByDisplayDate(activeTasks)
 
-            // Отображаем группы
-            for ((groupName, tasks) in groupedTasks) {
-                // Заголовок группы
-                if (tasks.isNotEmpty()) {
+            // Определяем порядок отображения групп
+            val groupOrder = listOf(
+                "Просрочено",
+                "Сегодня",
+                "Завтра",
+                "Послезавтра",
+                "На этой неделе",
+                "Будущие задачи",
+                "Без даты"
+            )
+
+            // Отображаем группы в правильном порядке
+            for (groupName in groupOrder) {
+                val tasks = groupedTasks[groupName]
+                if (tasks != null && tasks.isNotEmpty()) {
+                    // Заголовок группы
                     val groupTitle = TextView(this).apply {
                         text = groupName
                         setTextColor(ContextCompat.getColor(context, android.R.color.white))
@@ -171,27 +183,16 @@ class MainActivity : AppCompatActivity() {
     private fun groupTasksByDisplayDate(tasks: List<Task>): Map<String, List<Task>> {
         val groups = mutableMapOf<String, MutableList<Task>>()
 
-        // Предопределенные группы в порядке отображения
-        val groupOrder = listOf(
-            "Сегодня",
-            "Завтра",
-            "Послезавтра",
-            "Без даты"
-        )
-
-        // Создаем пустые группы
-        for (group in groupOrder) {
-            groups[group] = mutableListOf()
-        }
-
         // Распределяем задачи по группам
         for (task in tasks) {
             val groupName = getTaskGroupName(task)
+            if (!groups.containsKey(groupName)) {
+                groups[groupName] = mutableListOf()
+            }
             groups[groupName]?.add(task)
         }
 
-        // Удаляем пустые группы
-        return groups.filter { it.value.isNotEmpty() }
+        return groups
     }
 
     private fun getTaskGroupName(task: Task): String {
@@ -201,7 +202,7 @@ class MainActivity : AppCompatActivity() {
             task.deadline == Task.getTomorrowDate() -> "Завтра"
             task.deadline == Task.getAfterTomorrowDate() -> "Послезавтра"
             else -> {
-                // Для остальных дат определяем на сколько дней вперед
+                // Для остальных дат определяем категорию
                 try {
                     val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
                     val taskDate = dateFormat.parse(task.deadline)
@@ -220,7 +221,7 @@ class MainActivity : AppCompatActivity() {
                 } catch (e: Exception) {
                     // Ошибка парсинга даты
                 }
-                task.deadline // Если не удалось определить, показываем просто дату
+                "Будущие задачи" // Если не удалось определить, относим к будущим задачам
             }
         }
     }
