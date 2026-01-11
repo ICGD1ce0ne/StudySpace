@@ -20,14 +20,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:paddingHorizontal="16dp">
 
             <!-- Заголовок -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="45dp"
                 android:layout_marginBottom="20dp"
                 android:fontFamily="@font/montserrat_semibold"
                 android:text="Аналитика"
@@ -125,8 +125,8 @@
                             android:gravity="center_vertical">
 
                             <View
-                                android:layout_width="8dp"
-                                android:layout_height="8dp"
+                                android:layout_width="10dp"
+                                android:layout_height="10dp"
                                 android:layout_marginEnd="4dp"
                                 android:background="@drawable/day_indicator_focus" />
 
@@ -136,7 +136,7 @@
                                 android:fontFamily="@font/montserrat_light"
                                 android:text="Был в фокусе"
                                 android:textColor="#CCCCCC"
-                                android:textSize="10sp" />
+                                android:textSize="11sp" />
                         </LinearLayout>
 
                         <LinearLayout
@@ -147,33 +147,10 @@
                             android:gravity="center_vertical">
 
                             <View
-                                android:layout_width="8dp"
-                                android:layout_height="8dp"
+                                android:layout_width="10dp"
+                                android:layout_height="10dp"
                                 android:layout_marginEnd="4dp"
-                                android:background="@drawable/day_indicator_streak" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:fontFamily="@font/montserrat_light"
-                                android:text="Стрик"
-                                android:textColor="#CCCCCC"
-                                android:textSize="10sp" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="4dp"
-                                android:text="●"
-                                android:textColor="#4CAF50"
-                                android:textSize="12sp" />
+                                android:background="@drawable/today_circle_small" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -181,8 +158,14 @@
                                 android:fontFamily="@font/montserrat_light"
                                 android:text="Сегодня"
                                 android:textColor="#CCCCCC"
-                                android:textSize="10sp" />
+                                android:textSize="11sp" />
                         </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"/>
 
                     </LinearLayout>
 

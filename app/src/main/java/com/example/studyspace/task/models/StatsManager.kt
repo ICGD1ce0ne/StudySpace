@@ -56,9 +56,9 @@ class StatsManager(private val context: Context) {
         private const val KEY_SESSIONS = "focus_sessions"
         private const val KEY_DAILY_STATS = "daily_stats"
         private const val KEY_STREAK = "streak"
-        private const val KEY_LAST_SESSION_DATE = "last_session_date"
-        private const val KEY_STREAK_START_DATE = "streak_start_date"
+        private const val KEY_LAST_FOCUS_DATE = "last_focus_date"
         private const val KEY_LONGEST_STREAK = "longest_streak"
+        private const val KEY_LAST_ACTIVE_DATE = "last_active_date"
     }
 
     // Сохранить сессию фокуса
@@ -70,8 +70,8 @@ class StatsManager(private val context: Context) {
         // Обновляем ежедневную статистику
         updateDailyStats(session)
 
-        // Обновляем стрик
-        if (session.isCompleted) {
+        // Обновляем стрик только если сессия завершена
+        if (session.isCompleted && session.duration > 0) {
             updateStreak(session.startTime)
         }
     }
@@ -111,8 +111,8 @@ class StatsManager(private val context: Context) {
         // Максимальное время фокуса в сутки
         val maxDailyFocusTime = dailyStats.maxOfOrNull { it.totalFocusTime } ?: 0L
 
-        // Текущий стрик
-        val currentStreak = getCurrentStreak()
+        // Текущий стрик (расчитываем заново для точности)
+        val currentStreak = calculateCurrentStreak()
 
         // Получаем задачи за месяц
         val allTasks = taskManager.getTasks()
@@ -167,7 +167,7 @@ class StatsManager(private val context: Context) {
         }
     }
 
-    // Получить календарь для месяца (как в Duolingo)
+    // Получить календарь для месяца
     fun getCalendarForMonth(year: Int, month: Int): List<CalendarDay> {
         val calendarDays = mutableListOf<CalendarDay>()
         val calendar = Calendar.getInstance()
@@ -185,9 +185,6 @@ class StatsManager(private val context: Context) {
         val monthYearStr = String.format(Locale.getDefault(), "%02d.%d", month + 1, year)
         val dailyStats = getDailyStatsForMonth(monthYearStr)
         val dailyStatsMap = dailyStats.associateBy { it.date }
-
-        // Добавляем пустые дни для начала недели (если месяц начинается не с понедельника)
-        val startOffset = (firstDayOfMonth - Calendar.MONDAY + 7) % 7
 
         // Добавляем дни
         for (day in 1..daysInMonth) {
@@ -246,7 +243,7 @@ class StatsManager(private val context: Context) {
                 date = sessionDate,
                 totalFocusTime = session.duration,
                 completedSessions = if (session.isCompleted) 1 else 0,
-                completedTasks = 0 // Будет обновляться отдельно
+                completedTasks = 0
             ))
         }
 
@@ -266,9 +263,48 @@ class StatsManager(private val context: Context) {
         }
     }
 
-    // Получить текущий стрик
+    // Рассчитать текущий стрик (дни подряд, когда были завершенные сессии фокуса)
+    private fun calculateCurrentStreak(): Int {
+        val calendar = Calendar.getInstance()
+        val today = dateFormat.format(calendar.time)
+
+        // Получаем все дни со статистикой
+        val dailyStats = getDailyStats().sortedByDescending { it.date }
+        if (dailyStats.isEmpty()) return 0
+
+        var streak = 0
+        var currentDate = today
+
+        // Проверяем сегодняшний день
+        val todayStat = dailyStats.find { it.date == today }
+        if (todayStat == null || todayStat.completedSessions == 0) {
+            return 0 // Сегодня не было фокуса - стрик 0
+        }
+
+        streak = 1 // Сегодня был фокус
+
+        // Проверяем предыдущие дни
+        calendar.add(Calendar.DAY_OF_YEAR, -1)
+        var previousDate = dateFormat.format(calendar.time)
+
+        while (true) {
+            val prevStat = dailyStats.find { it.date == previousDate }
+            if (prevStat != null && prevStat.completedSessions > 0) {
+                streak++
+                calendar.add(Calendar.DAY_OF_YEAR, -1)
+                previousDate = dateFormat.format(calendar.time)
+            } else {
+                break
+            }
+        }
+
+        return streak
+    }
+
+    // Получить текущий стрик (из сохраненных данных)
     fun getCurrentStreak(): Int {
-        return sharedPreferences.getInt(KEY_STREAK, 0)
+        // Всегда пересчитываем для точности
+        return calculateCurrentStreak()
     }
 
     // Получить самый длинный стрик
@@ -276,104 +312,93 @@ class StatsManager(private val context: Context) {
         return sharedPreferences.getInt(KEY_LONGEST_STREAK, 0)
     }
 
-    // Получить историю стриков за последние 30 дней
-    fun getStreakHistory(): List<CalendarDay> {
-        val calendar = Calendar.getInstance()
-        val today = dateFormat.format(calendar.time)
-        val history = mutableListOf<CalendarDay>()
-
-        // Получаем статистику за последние 30 дней
-        val dailyStatsList: List<DailyStats> = getDailyStats()
-        val filteredStats: List<DailyStats> = dailyStatsList.filter { dailyStat ->
-            try {
-                val statDate = dateFormat.parse(dailyStat.date)
-                val currentDate = dateFormat.parse(today)
-                if (statDate != null && currentDate != null) {
-                    val diff = currentDate.time - statDate.time
-                    val daysDiff = diff / (1000 * 60 * 60 * 24)
-                    daysDiff.toInt() in 0..30
-                } else {
-                    false
-                }
-            } catch (e: Exception) {
-                false
-            }
-        }
-
-        val dailyStatsMap: Map<String, DailyStats> = filteredStats.associateBy { it.date }
-
-        // Создаем дни для последних 30 дней
-        for (i in 30 downTo 0) {
-            val dateCalendar = Calendar.getInstance().apply {
-                add(Calendar.DAY_OF_YEAR, -i)
-            }
-            val dateStr = dateFormat.format(dateCalendar.time)
-            val dailyStat = dailyStatsMap[dateStr]
-
-            history.add(CalendarDay(
-                date = dateStr,
-                hasFocusSession = dailyStat != null && dailyStat.totalFocusTime > 0,
-                totalFocusTime = dailyStat?.totalFocusTime ?: 0,
-                completedSessions = dailyStat?.completedSessions ?: 0,
-                isToday = i == 0
-            ))
-        }
-
-        return history
-    }
-
     // Обновить стрик
     private fun updateStreak(sessionTime: Long) {
         val sessionDate = dateFormat.format(Date(sessionTime))
-        val lastSessionDate = sharedPreferences.getString(KEY_LAST_SESSION_DATE, null)
-        val streakStartDate = sharedPreferences.getString(KEY_STREAK_START_DATE, null)
+        val lastFocusDate = sharedPreferences.getString(KEY_LAST_FOCUS_DATE, null)
+        val lastActiveDate = sharedPreferences.getString(KEY_LAST_ACTIVE_DATE, null)
 
-        if (lastSessionDate == null) {
-            // Первая сессия
+        // Сохраняем дату последней активности
+        sharedPreferences.edit().putString(KEY_LAST_ACTIVE_DATE, sessionDate).apply()
+
+        if (lastFocusDate == null) {
+            // Первый фокус
             sharedPreferences.edit()
+                .putString(KEY_LAST_FOCUS_DATE, sessionDate)
                 .putInt(KEY_STREAK, 1)
-                .putString(KEY_LAST_SESSION_DATE, sessionDate)
-                .putString(KEY_STREAK_START_DATE, sessionDate)
                 .apply()
         } else {
             try {
-                val lastDate = dateFormat.parse(lastSessionDate)
+                val lastDate = dateFormat.parse(lastFocusDate)
                 val currentDate = dateFormat.parse(sessionDate)
 
                 if (lastDate != null && currentDate != null) {
-                    val calendar = Calendar.getInstance()
-                    calendar.time = lastDate
-                    calendar.add(Calendar.DAY_OF_YEAR, 1)
-                    val nextDay = dateFormat.format(calendar.time)
+                    // Разница в днях между последним фокусом и текущим
+                    val diff = currentDate.time - lastDate.time
+                    val daysDiff = diff / (1000 * 60 * 60 * 24)
 
-                    if (sessionDate == nextDay) {
-                        // Последовательные дни
-                        val newStreak = getCurrentStreak() + 1
-                        sharedPreferences.edit()
-                            .putInt(KEY_STREAK, newStreak)
-                            .putString(KEY_LAST_SESSION_DATE, sessionDate)
-                            .apply()
-
-                        // Обновляем самый длинный стрик
-                        val longestStreak = getLongestStreak()
-                        if (newStreak > longestStreak) {
+                    when {
+                        daysDiff == 1L -> {
+                            // Последовательные дни с фокусом
+                            val newStreak = sharedPreferences.getInt(KEY_STREAK, 0) + 1
                             sharedPreferences.edit()
-                                .putInt(KEY_LONGEST_STREAK, newStreak)
+                                .putInt(KEY_STREAK, newStreak)
+                                .putString(KEY_LAST_FOCUS_DATE, sessionDate)
+                                .apply()
+
+                            // Обновляем самый длинный стрик
+                            val longestStreak = getLongestStreak()
+                            if (newStreak > longestStreak) {
+                                sharedPreferences.edit()
+                                    .putInt(KEY_LONGEST_STREAK, newStreak)
+                                    .apply()
+                            }
+                        }
+                        daysDiff == 0L -> {
+                            // Та же дата - не увеличиваем стрик, но обновляем дату
+                            sharedPreferences.edit()
+                                .putString(KEY_LAST_FOCUS_DATE, sessionDate)
                                 .apply()
                         }
-                    } else if (sessionDate != lastSessionDate) {
-                        // Сброс стрика
-                        sharedPreferences.edit()
-                            .putInt(KEY_STREAK, 1)
-                            .putString(KEY_LAST_SESSION_DATE, sessionDate)
-                            .putString(KEY_STREAK_START_DATE, sessionDate)
-                            .apply()
+                        else -> {
+                            // Пропуск дня или больше - проверяем был ли вчера фокус
+                            val yesterday = Calendar.getInstance().apply {
+                                time = currentDate
+                                add(Calendar.DAY_OF_YEAR, -1)
+                            }
+                            val yesterdayStr = dateFormat.format(yesterday.time)
+
+                            // Проверяем, была ли сессия вчера
+                            val hadFocusYesterday = getDailyStats().any {
+                                it.date == yesterdayStr && it.completedSessions > 0
+                            }
+
+                            if (!hadFocusYesterday) {
+                                // Вчера не было фокуса - сбрасываем стрик
+                                sharedPreferences.edit()
+                                    .putInt(KEY_STREAK, 1)
+                                    .putString(KEY_LAST_FOCUS_DATE, sessionDate)
+                                    .apply()
+                            } else {
+                                // Сбой в записи - сохраняем
+                                val newStreak = sharedPreferences.getInt(KEY_STREAK, 0) + 1
+                                sharedPreferences.edit()
+                                    .putInt(KEY_STREAK, newStreak)
+                                    .putString(KEY_LAST_FOCUS_DATE, sessionDate)
+                                    .apply()
+                            }
+                        }
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
+    }
+
+    // Проверить, был ли фокус в конкретный день
+    fun hadFocusOnDay(dateStr: String): Boolean {
+        return getDailyStats().any { it.date == dateStr && it.completedSessions > 0 }
     }
 
     // Получить все ежедневные статистики
@@ -399,15 +424,15 @@ class StatsManager(private val context: Context) {
         sharedPreferences.edit().putString(KEY_SESSIONS, json).apply()
     }
 
-    // Очистить все статистики (для тестирования)
+    // Очистить все статистики
     fun clearStats() {
         sharedPreferences.edit()
             .remove(KEY_SESSIONS)
             .remove(KEY_DAILY_STATS)
             .remove(KEY_STREAK)
-            .remove(KEY_LAST_SESSION_DATE)
-            .remove(KEY_STREAK_START_DATE)
+            .remove(KEY_LAST_FOCUS_DATE)
             .remove(KEY_LONGEST_STREAK)
+            .remove(KEY_LAST_ACTIVE_DATE)
             .apply()
     }
 }

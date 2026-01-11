@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="1dp">
+
+    <!-- Линия стрика слева (соединяет с предыдущим днем) -->
+    <View
+        android:id="@+id/viewStreakLineLeft"
+        android:layout_width="12dp"
+        android:layout_height="2dp"
+        android:layout_centerVertical="true"
+        android:layout_alignParentStart="true"
+        android:background="#FFC107"
+    android:visibility="gone" />
+
+    <!-- Линия стрика справа (соединяет со следующим днем) -->
+    <View
+        android:id="@+id/viewStreakLineRight"
+        android:layout_width="12dp"
+        android:layout_height="2dp"
+        android:layout_centerVertical="true"
+        android:layout_alignParentEnd="true"
+        android:background="#FFC107"
+    android:visibility="gone" />
+
+    <!-- Основной контент дня -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvDayNumber"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:gravity="center"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:fontFamily="@font/montserrat_medium" />
+
+        <View
+            android:id="@+id/viewDayIndicator"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:layout_marginTop="2dp"
+            android:background="@drawable/day_indicator_focus" />
+        <!-- По умолчанию желтый кружок, в коде может быть скрыт -->
+
+    </LinearLayout>
+
+</RelativeLayout>

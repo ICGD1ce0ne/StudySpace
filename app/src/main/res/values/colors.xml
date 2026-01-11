@@ -72,6 +72,7 @@
     <color name="calendar_text">#FFFFFF</color>
     <color name="calendar_text_dimmed">#CCCCCC</color>
     <color name="calendar_weekend">#FF5252</color>
+    <color name="streak_line_color">#4CAF50</color>
 
     <!-- Цвета для статистики -->
     <color name="stat_good">#4CAF50</color>

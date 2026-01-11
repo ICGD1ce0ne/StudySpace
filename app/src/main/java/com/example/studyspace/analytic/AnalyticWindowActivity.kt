@@ -18,7 +18,6 @@ import com.example.studyspace.main.MainActivity
 import com.example.studyspace.task.TaskWindowActivity
 import com.example.studyspace.task.models.StatsManager
 import com.example.studyspace.task.models.TaskManager
-import java.text.SimpleDateFormat
 import java.util.*
 
 class AnalyticWindowActivity : AppCompatActivity() {
@@ -262,7 +261,7 @@ class AnalyticWindowActivity : AppCompatActivity() {
         }
     }
 
-    // Адаптер для календаря
+    // Адаптер для календаря с кружками
     inner class CalendarAdapter(private val days: List<com.example.studyspace.task.models.CalendarDay>) :
         RecyclerView.Adapter<CalendarAdapter.CalendarViewHolder>() {
 
@@ -274,12 +273,11 @@ class AnalyticWindowActivity : AppCompatActivity() {
 
         inner class CalendarViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val tvDayNumber: TextView = itemView.findViewById(R.id.tvDayNumber)
-            val viewDayIndicator: View = itemView.findViewById(R.id.viewDayIndicator)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CalendarViewHolder {
             val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.calendar_day_item, parent, false)
+                .inflate(R.layout.calendar_day_item_simple, parent, false)
             return CalendarViewHolder(view)
         }
 
@@ -290,50 +288,31 @@ class AnalyticWindowActivity : AppCompatActivity() {
             // Устанавливаем номер дня
             holder.tvDayNumber.text = dayNumber.toString()
 
-            // Настраиваем индикатор
+            // Проверяем, был ли фокус в этот день
+            val hadFocus = day.hasFocusSession && day.completedSessions > 0
+
+            // Настраиваем отображение дня с красивыми кружками
             when {
                 day.isToday -> {
-                    holder.tvDayNumber.setTextColor(Color.WHITE)
-                    holder.tvDayNumber.setBackgroundResource(R.drawable.today_circle)
-                    holder.viewDayIndicator.setBackgroundResource(R.drawable.day_indicator_today)
-                }
-                day.hasFocusSession -> {
-                    holder.tvDayNumber.setTextColor(Color.WHITE)
-                    holder.tvDayNumber.setBackgroundResource(0)
-
-                    // Для дней со стриком (несколько дней подряд) используем другой цвет
-                    val streakHistory = statsManager.getStreakHistory()
-                    val todayIndex = streakHistory.indexOfFirst { it.isToday }
-                    if (todayIndex != -1) {
-                        // Проверяем, является ли этот день частью стрика
-                        var isStreakDay = false
-                        var consecutive = 0
-
-                        for (i in todayIndex downTo 0) {
-                            if (streakHistory[i].hasFocusSession) {
-                                consecutive++
-                                if (streakHistory[i].date == day.date) {
-                                    isStreakDay = true
-                                    break
-                                }
-                            } else {
-                                break
-                            }
-                        }
-
-                        if (isStreakDay && consecutive >= 2) {
-                            holder.viewDayIndicator.setBackgroundResource(R.drawable.day_indicator_streak)
-                        } else {
-                            holder.viewDayIndicator.setBackgroundResource(R.drawable.day_indicator_focus)
-                        }
+                    if (hadFocus) {
+                        // Сегодня + был фокус = оранжевый/золотой кружок
+                        holder.tvDayNumber.setTextColor(Color.WHITE)
+                        holder.tvDayNumber.setBackgroundResource(R.drawable.today_focus_circle)
                     } else {
-                        holder.viewDayIndicator.setBackgroundResource(R.drawable.day_indicator_focus)
+                        // Сегодня, но без фокуса = зеленый кружок
+                        holder.tvDayNumber.setTextColor(Color.WHITE)
+                        holder.tvDayNumber.setBackgroundResource(R.drawable.today_circle)
                     }
                 }
+                hadFocus -> {
+                    // Был фокус (но не сегодня) = желтый кружок
+                    holder.tvDayNumber.setTextColor(Color.WHITE)
+                    holder.tvDayNumber.setBackgroundResource(R.drawable.focus_circle)
+                }
                 else -> {
+                    // Нет фокуса
                     holder.tvDayNumber.setTextColor(Color.parseColor("#CCCCCC"))
-                    holder.tvDayNumber.setBackgroundResource(0)
-                    holder.viewDayIndicator.setBackgroundResource(R.drawable.day_indicator_default)
+                    holder.tvDayNumber.setBackgroundResource(0) // Без кружка
                 }
             }
 
