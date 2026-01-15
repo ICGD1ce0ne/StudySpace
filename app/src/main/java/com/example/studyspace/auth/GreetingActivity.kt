@@ -11,6 +11,8 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityOptionsCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
@@ -19,48 +21,71 @@ import com.example.studyspace.R
 
 class GreetingActivity : AppCompatActivity() {
 
+    // Элементы UI
     private lateinit var viewPager: ViewPager2
     private lateinit var nextButton: FrameLayout
     private lateinit var statusIcon: ImageView
     private lateinit var textNextButton: TextView
+
+    // Настройки приложения
     private lateinit var sharedPreferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_greeting)
 
-        // Инициализация через findViewById
+        initViews()
+        initSharedPreferences()
+        checkUserStatus()
+    }
+
+    // Инициализация View элементов
+    private fun initViews() {
         viewPager = findViewById(R.id.viewPagerForInfoAboutGreeting)
         nextButton = findViewById(R.id.layoutForNextButton)
         statusIcon = findViewById(R.id.statusIconOneOutOfThree)
         textNextButton = findViewById(R.id.textNextButton)
-
-        sharedPreferences = getSharedPreferences("user_preferences", Context.MODE_PRIVATE)
-
-        checkUser()
     }
 
-    private fun checkUser() {
+    // Инициализация SharedPreferences для хранения данных пользователя
+    private fun initSharedPreferences() {
+        sharedPreferences = getSharedPreferences("user_preferences", Context.MODE_PRIVATE)
+    }
+
+    // Проверка статуса пользователя (зарегистрирован или нет)
+    private fun checkUserStatus() {
         val userName = sharedPreferences.getString("user_name", null)
 
         if (userName != null) {
-            val intent = Intent(this, GreetRegisteredUser::class.java)
-
-            intent.putExtra("user_name", userName)
-            startActivity(intent)
-            finish()
+            // Пользователь зарегистрирован - переходим к приветствию
+            navigateToGreetRegisteredUser(userName)
         } else {
-            setupViewPager()
-            setupNextButton()
-            updateStatusIcon(0)
+            // Новый пользователь - показываем приветственные экраны
+            setupGreetingFlow()
         }
     }
 
+    // Навигация к экрану приветствия зарегистрированного пользователя
+    private fun navigateToGreetRegisteredUser(userName: String) {
+        val intent = Intent(this, GreetRegisteredUser::class.java).apply {
+            putExtra("user_name", userName)
+        }
+        startActivity(intent)
+        finish()
+    }
 
+    // Настройка приветственного потока (три экрана)
+    private fun setupGreetingFlow() {
+        setupViewPager()
+        setupNextButton()
+        updateStatusIcon(0) // Начинаем с первой страницы
+    }
+
+    // Настройка ViewPager с тремя фрагментами приветствия
     private fun setupViewPager() {
         viewPager.adapter = GreetingPagerAdapter(this)
 
-        // Слушатель изменения страницы для обновления иконки статуса
+        // Слушатель изменения страницы для обновления UI
         viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 updateStatusIcon(position)
@@ -69,40 +94,63 @@ class GreetingActivity : AppCompatActivity() {
         })
     }
 
+    // Настройка кнопки "Далее/Начать"
     private fun setupNextButton() {
         nextButton.setOnClickListener {
-            val currentItem = viewPager.currentItem
-            if (currentItem < 2) {
-                // Переход на следующую страницу приветствия
-                viewPager.currentItem = currentItem + 1
-            } else {
-                // Последняя страница - переход к экрану авторизации
-                val intent = Intent(this, SignUpActivity::class.java)
-                startActivity(intent)
-                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-                finish()
-            }
+            handleNextButtonClick()
         }
     }
 
+    // Обработка клика по кнопке "Далее/Начать"
+    private fun handleNextButtonClick() {
+        val currentItem = viewPager.currentItem
+
+        if (currentItem < TOTAL_GREETING_PAGES - 1) {
+            // Переход на следующую страницу приветствия
+            viewPager.currentItem = currentItem + 1
+        } else {
+            // Последняя страница - переход к регистрации
+            navigateToSignUp()
+        }
+    }
+
+    // Навигация к экрану регистрации
+    private fun navigateToSignUp() {
+        val intent = Intent(this, SignUpActivity::class.java)
+        val options = ActivityOptionsCompat.makeCustomAnimation(
+            this,
+            R.anim.slide_in_right,
+            R.anim.slide_out_left
+        )
+        ContextCompat.startActivity(this, intent, options.toBundle())
+        finish()
+    }
+
+    // Обновление индикатора текущей страницы (1/3, 2/3, 3/3)
     private fun updateStatusIcon(position: Int) {
         val iconRes = when (position) {
             0 -> R.drawable.icon_one_out_of_three
             1 -> R.drawable.icon_two_out_of_three
             2 -> R.drawable.icon_three_out_of_three
-            else -> R.drawable.icon_one_out_of_three
+            else -> R.drawable.icon_one_out_of_three // Fallback
         }
         statusIcon.setImageResource(iconRes)
     }
 
+    // Обновление текста кнопки в зависимости от страницы
     private fun updateButtonText(position: Int) {
         textNextButton.text = when (position) {
-            2 -> "Начать" // На последней странице
+            LAST_PAGE_INDEX -> "Начать" // На последней странице
             else -> "Далее"
         }
     }
 
-    // Вложенные классы фрагментов
+    companion object {
+        private const val TOTAL_GREETING_PAGES = 3
+        private const val LAST_PAGE_INDEX = TOTAL_GREETING_PAGES - 1
+    }
+
+    // Фрагмент для первой страницы приветствия
     class GreetingFragment1 : Fragment() {
         override fun onCreateView(
             inflater: LayoutInflater,
@@ -113,6 +161,7 @@ class GreetingActivity : AppCompatActivity() {
         }
     }
 
+    // Фрагмент для второй страницы приветствия
     class GreetingFragment2 : Fragment() {
         override fun onCreateView(
             inflater: LayoutInflater,
@@ -123,6 +172,7 @@ class GreetingActivity : AppCompatActivity() {
         }
     }
 
+    // Фрагмент для третьей страницы приветствия
     class GreetingFragment3 : Fragment() {
         override fun onCreateView(
             inflater: LayoutInflater,
@@ -133,18 +183,18 @@ class GreetingActivity : AppCompatActivity() {
         }
     }
 
-    // Adapter для ViewPager2
+    // Адаптер для ViewPager2 с тремя фрагментами приветствия
     inner class GreetingPagerAdapter(fragmentActivity: FragmentActivity) :
         FragmentStateAdapter(fragmentActivity) {
 
-        override fun getItemCount(): Int = 3
+        override fun getItemCount(): Int = TOTAL_GREETING_PAGES
 
         override fun createFragment(position: Int): Fragment {
             return when (position) {
                 0 -> GreetingFragment1()
                 1 -> GreetingFragment2()
                 2 -> GreetingFragment3()
-                else -> GreetingFragment1()
+                else -> GreetingFragment1() // Fallback
             }
         }
     }

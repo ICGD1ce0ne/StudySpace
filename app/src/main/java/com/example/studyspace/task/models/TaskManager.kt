@@ -15,13 +15,11 @@ class TaskManager(private val context: Context) {
     private val gson = Gson()
     private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
-    // Сохранить все задачи
     fun saveTasks(tasks: List<Task>) {
         val json = gson.toJson(tasks)
         sharedPreferences.edit().putString("tasks_list", json).apply()
     }
 
-    // Получить все задачи
     fun getTasks(): List<Task> {
         val json = sharedPreferences.getString("tasks_list", null)
         return if (json != null) {
@@ -32,12 +30,10 @@ class TaskManager(private val context: Context) {
         }
     }
 
-    // Получить только активные (невыполненные) задачи
     fun getActiveTasks(): List<Task> {
         return getTasks().filter { !it.isCompleted }
     }
 
-    // Получить задачи для фокуса (сегодняшние или без дедлайна)
     fun getTasksForFocus(): List<Task> {
         val today = Task.getTodayDate()
         return getActiveTasks().filter {
@@ -45,21 +41,18 @@ class TaskManager(private val context: Context) {
         }
     }
 
-    // Добавить новую задачу
     fun addTask(task: Task) {
         val tasks = getTasks().toMutableList()
         tasks.add(task)
         saveTasks(tasks)
     }
 
-    // Удалить задачу по ID
     fun deleteTask(taskId: String) {
         val tasks = getTasks().toMutableList()
         tasks.removeAll { it.id == taskId }
         saveTasks(tasks)
     }
 
-    // Обновить задачу
     fun updateTask(updatedTask: Task) {
         val tasks = getTasks().toMutableList()
         val index = tasks.indexOfFirst { it.id == updatedTask.id }
@@ -69,90 +62,73 @@ class TaskManager(private val context: Context) {
         }
     }
 
-    // Обновить только время задачи
     fun updateTaskTime(taskId: String, time: String) {
-        val task = getTaskById(taskId)
-        task?.let {
-            val updatedTask = it.copy(time = time)
+        getTaskById(taskId)?.let { task ->
+            val updatedTask = task.copy(time = time)
             updateTask(updatedTask)
         }
     }
 
-    // Получить задачу по ID
     fun getTaskById(taskId: String): Task? {
         return getTasks().find { it.id == taskId }
     }
 
-    // Получить задачи, сгруппированные по дате
     fun getTasksGroupedByDate(): Map<String, List<Task>> {
         val tasks = getTasks()
 
-        // Сортируем задачи по дате дедлайна
-        val sortedTasks = tasks.sortedBy {
+        val sortedTasks = tasks.sortedBy { task ->
             try {
-                dateFormat.parse(it.deadline)?.time ?: 0L
+                dateFormat.parse(task.deadline)?.time ?: 0L
             } catch (e: Exception) {
                 0L
             }
         }
 
-        // Группируем по дате
         return sortedTasks.groupBy { it.deadline }
     }
 
-    // Получить отображаемое имя для группы
-    fun getDisplayNameForDate(date: String): String {
-        return when (date) {
-            Task.getTodayDate() -> "Сегодня"
-            Task.getTomorrowDate() -> "Завтра"
-            Task.getAfterTomorrowDate() -> "Послезавтра"
-            else -> date
-        }
+    fun getDisplayNameForDate(date: String): String = when (date) {
+        Task.getTodayDate() -> "Сегодня"
+        Task.getTomorrowDate() -> "Завтра"
+        Task.getAfterTomorrowDate() -> "Послезавтра"
+        else -> date
     }
 
-    // Получить правильное окончание для количества задач
-    fun getTaskCountText(count: Int): String {
-        return when {
-            count % 10 == 1 && count % 100 != 11 -> "$count задача"
-            count % 10 in 2..4 && count % 100 !in 12..14 -> "$count задачи"
-            else -> "$count задач"
-        }
+    fun getTaskCountText(count: Int): String = when {
+        count % 10 == 1 && count % 100 != 11 -> "$count задача"
+        count % 10 in 2..4 && count % 100 !in 12..14 -> "$count задачи"
+        else -> "$count задач"
     }
 
-    // Получить задачи на сегодня
     fun getTodayTasks(): List<Task> {
         val today = Task.getTodayDate()
         return getTasks().filter { it.deadline == today }
     }
 
-    // Получить задачи на завтра
     fun getTomorrowTasks(): List<Task> {
         val tomorrow = Task.getTomorrowDate()
         return getTasks().filter { it.deadline == tomorrow }
     }
 
-    // Получить просроченные задачи
     fun getOverdueTasks(): List<Task> {
-        val today = Calendar.getInstance()
         val todayFormatted = Task.getTodayDate()
 
         return getActiveTasks().filter { task ->
             try {
                 val taskDate = dateFormat.parse(task.deadline)
-                taskDate?.before(today.time) == true && task.deadline != todayFormatted
+                taskDate?.before(Calendar.getInstance().time) == true &&
+                        task.deadline != todayFormatted
             } catch (e: Exception) {
                 false
             }
         }
     }
 
-    // Очистить все выполненные задачи
     fun clearCompletedTasks() {
         val activeTasks = getActiveTasks()
         saveTasks(activeTasks)
     }
 
-    // Получить статистику по задачам
     fun getTaskStats(): Map<String, Int> {
         val tasks = getTasks()
         val total = tasks.size

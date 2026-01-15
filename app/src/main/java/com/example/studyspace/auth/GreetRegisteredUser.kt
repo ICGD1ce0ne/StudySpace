@@ -6,32 +6,63 @@ import android.os.Handler
 import android.os.Looper
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityOptionsCompat
+import androidx.core.content.ContextCompat
 import com.example.studyspace.R
 import com.example.studyspace.main.MainActivity
 
 class GreetRegisteredUser : AppCompatActivity() {
 
+    // UI элементы
     private lateinit var labelName: TextView
+
+    // Константы
+    companion object {
+        private const val NAVIGATION_DELAY_MS = 2000L // Задержка перехода 2 секунды
+        private const val EXTRA_USER_NAME = "user_name"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_greeting_registered_user)
 
+        initViews()
+        displayUserName()
+        scheduleNavigationToMain()
+    }
+
+    // Инициализация UI элементов
+    private fun initViews() {
         labelName = findViewById(R.id.labelName)
+    }
 
-        val userName = intent.getStringExtra("user_name")
+    // Отображение имени пользователя
+    private fun displayUserName() {
+        val userName = intent.getStringExtra(EXTRA_USER_NAME)
 
-        if (userName != null && userName.isNotEmpty()) {
-            labelName.text = userName
+        labelName.text = if (!userName.isNullOrEmpty()) {
+            userName
         } else {
-            labelName.text = ""
+            "" // Если имя не передано, оставляем пустым
         }
+    }
 
+    // Планирование перехода на главный экран с задержкой
+    private fun scheduleNavigationToMain() {
         Handler(Looper.getMainLooper()).postDelayed({
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
-            overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
-            finish()
-        }, 2000)
+            navigateToMainActivity()
+        }, NAVIGATION_DELAY_MS)
+    }
+
+    // Навигация на главный экран с анимацией
+    private fun navigateToMainActivity() {
+        val intent = Intent(this, MainActivity::class.java)
+        val options = ActivityOptionsCompat.makeCustomAnimation(
+            this,
+            R.anim.fade_in,
+            R.anim.fade_out
+        )
+        ContextCompat.startActivity(this, intent, options.toBundle())
+        finish()
     }
 }

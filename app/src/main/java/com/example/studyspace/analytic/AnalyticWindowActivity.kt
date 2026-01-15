@@ -18,6 +18,7 @@ import com.example.studyspace.main.MainActivity
 import com.example.studyspace.task.TaskWindowActivity
 import com.example.studyspace.task.models.StatsManager
 import com.example.studyspace.task.models.TaskManager
+import java.text.SimpleDateFormat
 import java.util.*
 
 class AnalyticWindowActivity : AppCompatActivity() {
@@ -35,6 +36,9 @@ class AnalyticWindowActivity : AppCompatActivity() {
     private lateinit var tvLongestStreak: TextView
     private lateinit var tvTaskCompletionRate: TextView
     private lateinit var tvOverdueTasks: TextView
+
+    // Заголовок статистики
+    private lateinit var tvStatsTitle: TextView
 
     // Календарь элементы
     private lateinit var tvMonthTitle: TextView
@@ -73,6 +77,9 @@ class AnalyticWindowActivity : AppCompatActivity() {
         btnNextMonth = findViewById(R.id.btnNextMonth)
         recyclerViewCalendar = findViewById(R.id.recyclerViewCalendar)
         weekDaysContainer = findViewById(R.id.weekDaysContainer)
+
+        // Находим заголовок статистики
+        tvStatsTitle = findViewById(R.id.tvStatsTitle)
 
         statsManager = StatsManager(this)
         taskManager = TaskManager(this)
@@ -163,8 +170,12 @@ class AnalyticWindowActivity : AppCompatActivity() {
     }
 
     private fun loadCalendar() {
-        // Обновляем заголовок месяца
-        tvMonthTitle.text = statsManager.getMonthName(currentMonth)
+        // Обновляем заголовок месяца календаря (в именительном падеже)
+        val monthName = getMonthNameNominative(currentMonth)
+        tvMonthTitle.text = "$monthName $currentYear"
+
+        // Обновляем заголовок статистики для этого месяца
+        tvStatsTitle.text = "Статистика за $monthName"
 
         // Получаем дни для месяца
         val calendarDays = statsManager.getCalendarForMonth(currentYear, currentMonth)
@@ -175,40 +186,67 @@ class AnalyticWindowActivity : AppCompatActivity() {
                 showDayDetails(day)
             }
         }
+
+        // Загружаем статистику для этого месяца
+        loadStatistics()
+    }
+
+    private fun getMonthNameNominative(month: Int): String {
+        return when (month) {
+            0 -> "Январь"
+            1 -> "Февраль"
+            2 -> "Март"
+            3 -> "Апрель"
+            4 -> "Май"
+            5 -> "Июнь"
+            6 -> "Июль"
+            7 -> "Август"
+            8 -> "Сентябрь"
+            9 -> "Октябрь"
+            10 -> "Ноябрь"
+            11 -> "Декабрь"
+            else -> "Месяц"
+        }
     }
 
     private fun loadStatistics() {
-        val monthStats = statsManager.getCurrentMonthStats()
+        // Получаем статистику для выбранного в календаре месяца
+        val monthYear = String.format(Locale.getDefault(), "%02d.%d",
+            currentMonth + 1, currentYear)
 
-        // 1. Общее время в фокусе
+        // Получаем статистику для выбранного месяца
+        val monthStats = statsManager.getMonthStats(monthYear)
+
+        // 1. Общее время в фокусе (только для этого месяца)
         val totalHours = monthStats.totalFocusTime / (1000 * 60 * 60)
         val totalMinutes = (monthStats.totalFocusTime % (1000 * 60 * 60)) / (1000 * 60)
         tvTotalFocusTime.text = "${totalHours}ч ${totalMinutes}м"
 
-        // 2. Количество завершенных сессий
+        // 2. Количество завершенных сессий (только для этого месяца)
         tvCompletedSessions.text = monthStats.completedSessions.toString()
 
-        // 3. Самая длинная сессия
+        // 3. Самая длинная сессия (только для этого месяца)
         val longestSessionMinutes = monthStats.longestSession / (1000 * 60)
         tvLongestSession.text = "${longestSessionMinutes} мин"
 
-        // 4. Максимальная продуктивность в сутки
+        // 4. Максимальная продуктивность в сутки (только для этого месяца)
         val maxDailyHours = monthStats.maxDailyFocusTime / (1000 * 60 * 60)
         val maxDailyMinutes = (monthStats.maxDailyFocusTime % (1000 * 60 * 60)) / (1000 * 60)
         tvMaxDailyFocus.text = "${maxDailyHours}ч ${maxDailyMinutes}м"
 
-        // 5. Текущий стрик
-        tvCurrentStreak.text = "${monthStats.currentStreak} дней"
+        // 5. Текущий стрик (общий, не привязан к месяцу)
+        val currentStreak = statsManager.getCurrentStreak()
+        tvCurrentStreak.text = "${currentStreak} дней"
 
-        // 6. Самый длинный стрик
+        // 6. Самый длинный стрик (общий, не привязан к месяцу)
         val longestStreak = statsManager.getLongestStreak()
         tvLongestStreak.text = "${longestStreak} дней"
 
-        // 7. Процент выполненных задач
+        // 7. Процент выполненных задач (для всех задач, можно изменить на только для месяца)
         val completionRate = String.format("%.1f", monthStats.taskCompletionRate)
         tvTaskCompletionRate.text = "$completionRate%"
 
-        // 8. Количество просроченных задач
+        // 8. Количество просроченных задач (для всех задач, можно изменить на только для месяца)
         tvOverdueTasks.text = monthStats.overdueTasks.toString()
 
         // Изменяем цвет в зависимости от показателей
@@ -220,21 +258,30 @@ class AnalyticWindowActivity : AppCompatActivity() {
         val hours = day.totalFocusTime / (1000 * 60 * 60)
         val minutes = (day.totalFocusTime % (1000 * 60 * 60)) / (1000 * 60)
 
+        // Форматируем дату для красивого отображения
+        val dateParts = day.date.split(".")
+        val formattedDate = if (dateParts.size == 3) {
+            "${dateParts[0]}.${dateParts[1]}.${dateParts[2]}"
+        } else {
+            day.date
+        }
+
         val message = if (day.hasFocusSession) {
-            "День: ${day.date}\n" +
+            "День: $formattedDate\n" +
                     "Время в фокусе: ${hours}ч ${minutes}м\n" +
                     "Завершенных сессий: ${day.completedSessions}"
         } else {
-            "День: ${day.date}\n" +
+            "День: $formattedDate\n" +
                     "Нет сессий фокуса"
         }
 
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
     private fun updateVisuals(monthStats: com.example.studyspace.task.models.MonthStats) {
         // Для стрика - зеленый если больше 0
-        if (monthStats.currentStreak > 0) {
+        val currentStreak = statsManager.getCurrentStreak()
+        if (currentStreak > 0) {
             tvCurrentStreak.setTextColor(ContextCompat.getColor(this, R.color.green))
         } else {
             tvCurrentStreak.setTextColor(ContextCompat.getColor(this, R.color.white))
@@ -316,9 +363,17 @@ class AnalyticWindowActivity : AppCompatActivity() {
                 }
             }
 
+            // Если это пустой день (для выравнивания календаря)
+            if (dayNumber == 0) {
+                holder.tvDayNumber.text = ""
+                holder.tvDayNumber.setBackgroundResource(0)
+            }
+
             // Обработчик клика
             holder.itemView.setOnClickListener {
-                onDayClickListener?.invoke(day)
+                if (dayNumber > 0) { // Запрещаем клик по пустым ячейкам
+                    onDayClickListener?.invoke(day)
+                }
             }
         }
 

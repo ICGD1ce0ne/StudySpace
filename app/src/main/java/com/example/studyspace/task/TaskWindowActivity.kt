@@ -23,12 +23,11 @@ import androidx.fragment.app.DialogFragment
 import com.example.studyspace.R
 import com.example.studyspace.analytic.AnalyticWindowActivity
 import com.example.studyspace.main.MainActivity
-import com.example.studyspace.task.models.TaskManager
 import com.example.studyspace.task.models.Task
+import com.example.studyspace.task.models.TaskManager
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-import kotlin.collections.iterator
 
 class TaskWindowActivity : AppCompatActivity() {
 
@@ -43,14 +42,7 @@ class TaskWindowActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_task_window)
 
-        buttonTaskList = findViewById(R.id.buttonTaskList)
-        buttonGoal = findViewById(R.id.buttonGoal)
-        buttonAnalytic = findViewById(R.id.buttonAnalytic)
-        layoutForAddTaskButton = findViewById(R.id.layoutForAddTaskButton)
-
-        val scrollView = findViewById<ScrollView>(R.id.scrollView2)
-        scrollContainer = scrollView.getChildAt(0) as LinearLayout
-
+        initViews()
         taskManager = TaskManager(this)
 
         initButtons()
@@ -62,26 +54,44 @@ class TaskWindowActivity : AppCompatActivity() {
         loadTasks()
     }
 
+    private fun initViews() {
+        buttonTaskList = findViewById(R.id.buttonTaskList)
+        buttonGoal = findViewById(R.id.buttonGoal)
+        buttonAnalytic = findViewById(R.id.buttonAnalytic)
+        layoutForAddTaskButton = findViewById(R.id.layoutForAddTaskButton)
+
+        val scrollView = findViewById<ScrollView>(R.id.scrollView2)
+        scrollContainer = scrollView.getChildAt(0) as LinearLayout
+    }
+
     private fun initButtons() {
         buttonTaskList.setOnClickListener {
             Toast.makeText(this, "Вы уже в задачах", Toast.LENGTH_SHORT).show()
         }
 
         buttonGoal.setOnClickListener {
-            val goToMainMenu = Intent(this, MainActivity::class.java)
-            startActivity(goToMainMenu)
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+            navigateToMainMenu()
         }
 
         buttonAnalytic.setOnClickListener {
-            val goToAnalytic = Intent(this, AnalyticWindowActivity::class.java)
-            startActivity(goToAnalytic)
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+            navigateToAnalytics()
         }
 
         layoutForAddTaskButton.setOnClickListener {
             showAddTaskDialog()
         }
+    }
+
+    private fun navigateToMainMenu() {
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+    }
+
+    private fun navigateToAnalytics() {
+        val intent = Intent(this, AnalyticWindowActivity::class.java)
+        startActivity(intent)
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
     }
 
     private fun loadTasks() {
@@ -90,47 +100,59 @@ class TaskWindowActivity : AppCompatActivity() {
         val groupedTasks = taskManager.getTasksGroupedByDate()
 
         if (groupedTasks.isEmpty()) {
-            val emptyText = TextView(this).apply {
-                text = "Задач пока нет\nДобавьте первую задачу!"
-                setTextColor(getColor(R.color.white))
-                textSize = 16f
-                typeface = resources.getFont(R.font.montserrat)
-                gravity = Gravity.CENTER_HORIZONTAL
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    topMargin = dpToPx(0)
-                }
-            }
-            scrollContainer.addView(emptyText)
+            showEmptyState()
         } else {
-            for ((date, tasks) in groupedTasks) {
-                val groupTitle = TextView(this).apply {
-                    val displayName = taskManager.getDisplayNameForDate(date)
-                    val countText = taskManager.getTaskCountText(tasks.size)
-                    text = "$displayName - $countText"
-                    setTextColor(getColor(R.color.white))
-                    textSize = 18f
-                    typeface = resources.getFont(R.font.montserrat_medium)
-                    gravity = Gravity.START
-                    layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                    ).apply {
-                        topMargin = dpToPx(20)
-                        marginStart = dpToPx(45)
-                        marginEnd = dpToPx(45)
-                    }
-                }
-                scrollContainer.addView(groupTitle)
+            displayGroupedTasks(groupedTasks)
+        }
+    }
 
-                for (task in tasks) {
-                    val taskView = createTaskView(task)
-                    scrollContainer.addView(taskView)
-                }
+    private fun showEmptyState() {
+        val emptyText = TextView(this).apply {
+            text = "Задач пока нет\nДобавьте первую задачу!"
+            setTextColor(getColor(R.color.white))
+            textSize = 16f
+            typeface = resources.getFont(R.font.montserrat)
+            gravity = Gravity.CENTER_HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dpToPx(0)
             }
         }
+        scrollContainer.addView(emptyText)
+    }
+
+    private fun displayGroupedTasks(groupedTasks: Map<String, List<Task>>) {
+        for ((date, tasks) in groupedTasks) {
+            addGroupHeader(date, tasks)
+            tasks.forEach { task ->
+                val taskView = createTaskView(task)
+                scrollContainer.addView(taskView)
+            }
+        }
+    }
+
+    private fun addGroupHeader(date: String, tasks: List<Task>) {
+        val displayName = taskManager.getDisplayNameForDate(date)
+        val countText = taskManager.getTaskCountText(tasks.size)
+
+        val groupTitle = TextView(this).apply {
+            text = "$displayName - $countText"
+            setTextColor(getColor(R.color.white))
+            textSize = 18f
+            typeface = resources.getFont(R.font.montserrat_medium)
+            gravity = Gravity.START
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dpToPx(20)
+                marginStart = dpToPx(45)
+                marginEnd = dpToPx(45)
+            }
+        }
+        scrollContainer.addView(groupTitle)
     }
 
     private fun createTaskView(task: Task): View {
@@ -144,9 +166,7 @@ class TaskWindowActivity : AppCompatActivity() {
         taskNameLabel.text = task.title
 
         taskLayout.setOnClickListener {
-            val updatedTask = task.copy(isCompleted = !task.isCompleted)
-            taskManager.updateTask(updatedTask)
-            loadTasks()
+            toggleTaskCompletion(task)
         }
 
         editButton.setOnClickListener {
@@ -159,6 +179,12 @@ class TaskWindowActivity : AppCompatActivity() {
         }
 
         return taskView
+    }
+
+    private fun toggleTaskCompletion(task: Task) {
+        val updatedTask = task.copy(isCompleted = !task.isCompleted)
+        taskManager.updateTask(updatedTask)
+        loadTasks()
     }
 
     private fun showEditTaskDialog(task: Task) {
@@ -181,11 +207,6 @@ class TaskWindowActivity : AppCompatActivity() {
         dialog.show(supportFragmentManager, "AddTaskDialog")
     }
 
-    private fun dpToPx(dp: Int): Int {
-        return (dp * resources.displayMetrics.density).toInt()
-    }
-
-    // Вспомогательные функции для DatePicker и TimePicker
     fun showDatePickerDialog(editText: EditText) {
         val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)
@@ -214,7 +235,7 @@ class TaskWindowActivity : AppCompatActivity() {
         val timePicker = TimePickerDialog(
             this,
             { _, selectedHour, selectedMinute ->
-                val time = String.Companion.format(
+                val time = String.format(
                     Locale.getDefault(),
                     "%02d:%02d",
                     selectedHour,
@@ -222,12 +243,13 @@ class TaskWindowActivity : AppCompatActivity() {
                 )
                 editText.setText(time)
             },
-            hour, minute, true // 24-часовой формат
+            hour, minute, true
         )
         timePicker.show()
     }
 
-    // DialogFragment для добавления задачи
+    private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
+
     class AddTaskDialogFragment(
         private val onTaskAdded: (Task) -> Unit
     ) : DialogFragment() {
@@ -241,10 +263,10 @@ class TaskWindowActivity : AppCompatActivity() {
         }
 
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-            val dialog = super.onCreateDialog(savedInstanceState)
-            dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-            dialog.window?.setDimAmount(0.5f)
-            return dialog
+            return super.onCreateDialog(savedInstanceState).apply {
+                window?.setBackgroundDrawableResource(android.R.color.transparent)
+                window?.setDimAmount(0.5f)
+            }
         }
 
         override fun onStart() {
@@ -267,65 +289,71 @@ class TaskWindowActivity : AppCompatActivity() {
             val layoutForOtherButton = view.findViewById<FrameLayout>(R.id.layoutForOtherButton)
             val layoutForNextButton = view.findViewById<FrameLayout>(R.id.layoutForNextButton)
 
-            // Делаем поля даты и времени не редактируемыми вручную
-            editTextDeadlineTask.isFocusable = false
-            editTextDeadlineTask.isClickable = true
+            setupEditTextListeners(editTextDeadlineTask, editTextDeadlineTimeTask)
+            setupDateQuickButtons(editTextDeadlineTask)
+            setupAddButton(editTextTaskName, editTextDeadlineTask, editTextDeadlineTimeTask, layoutForNextButton)
+        }
 
-            editTextDeadlineTimeTask.isFocusable = false
-            editTextDeadlineTimeTask.isClickable = true
-
-            // При клике на поле даты открываем DatePicker
-            editTextDeadlineTask.setOnClickListener {
-                val activity = requireActivity() as TaskWindowActivity
-                activity.showDatePickerDialog(editTextDeadlineTask)
-            }
-
-            // При клике на поле времени открываем TimePicker
-            editTextDeadlineTimeTask.setOnClickListener {
-                val activity = requireActivity() as TaskWindowActivity
-                activity.showTimePickerDialog(editTextDeadlineTimeTask)
-            }
-
-            view.setOnClickListener { dismiss() }
-
-            // Кнопки быстрого выбора даты
-            layoutForTodayButton.setOnClickListener {
-                editTextDeadlineTask.setText(Task.Companion.getTodayDate())
-            }
-
-            layoutForTomorrowButton.setOnClickListener {
-                editTextDeadlineTask.setText(Task.Companion.getTomorrowDate())
-            }
-
-            layoutForAfterTomorrowButton.setOnClickListener {
-                editTextDeadlineTask.setText(Task.Companion.getAfterTomorrowDate())
-            }
-
-            layoutForOtherButton.setOnClickListener {
-                // Теперь тоже открываем DatePicker
-                val activity = requireActivity() as TaskWindowActivity
-                activity.showDatePickerDialog(editTextDeadlineTask)
-            }
-
-            // Кнопка добавления задачи
-            layoutForNextButton.setOnClickListener {
-                val taskName = editTextTaskName.text.toString().trim()
-                val deadline = editTextDeadlineTask.text.toString().trim()
-                val time = editTextDeadlineTimeTask.text.toString().trim()
-
-                if (taskName.isEmpty()) {
-                    Toast.makeText(context, "Введите название задачи", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
+        private fun setupEditTextListeners(
+            deadlineEditText: EditText,
+            timeEditText: EditText
+        ) {
+            deadlineEditText.apply {
+                isFocusable = false
+                isClickable = true
+                setOnClickListener {
+                    (requireActivity() as TaskWindowActivity)
+                        .showDatePickerDialog(this)
                 }
+            }
 
-                if (deadline.isEmpty()) {
-                    Toast.makeText(context, "Выберите дату", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
+            timeEditText.apply {
+                isFocusable = false
+                isClickable = true
+                setOnClickListener {
+                    (requireActivity() as TaskWindowActivity)
+                        .showTimePickerDialog(this)
                 }
+            }
+        }
 
-                // Проверяем формат времени (необязательно)
-                if (time.isNotEmpty() && !time.matches(Regex("^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"))) {
-                    Toast.makeText(context, "Введите время в формате HH:mm", Toast.LENGTH_SHORT).show()
+        private fun setupDateQuickButtons(deadlineEditText: EditText) {
+            val todayButton = view?.findViewById<FrameLayout>(R.id.layoutForTodayButton)
+            val tomorrowButton = view?.findViewById<FrameLayout>(R.id.layoutForTomorrowButton)
+            val afterTomorrowButton = view?.findViewById<FrameLayout>(R.id.layoutForAfterTomorrowButton)
+            val otherButton = view?.findViewById<FrameLayout>(R.id.layoutForOtherButton)
+
+            todayButton?.setOnClickListener {
+                deadlineEditText.setText(Task.getTodayDate())
+            }
+
+            tomorrowButton?.setOnClickListener {
+                deadlineEditText.setText(Task.getTomorrowDate())
+            }
+
+            afterTomorrowButton?.setOnClickListener {
+                deadlineEditText.setText(Task.getAfterTomorrowDate())
+            }
+
+            otherButton?.setOnClickListener {
+                (requireActivity() as TaskWindowActivity)
+                    .showDatePickerDialog(deadlineEditText)
+            }
+        }
+
+        private fun setupAddButton(
+            taskNameEditText: EditText,
+            deadlineEditText: EditText,
+            timeEditText: EditText,
+            addButton: FrameLayout
+        ) {
+            addButton.setOnClickListener {
+                val taskName = taskNameEditText.text.toString()
+                val deadline = deadlineEditText.text.toString()
+                val time = timeEditText.text.toString()
+
+                // ПРОВЕРКА НА ПУСТЫЕ ПОЛЯ (время теперь обязательно)
+                if (!validateInput(taskName, deadline, time)) {
                     return@setOnClickListener
                 }
 
@@ -339,15 +367,45 @@ class TaskWindowActivity : AppCompatActivity() {
                 Toast.makeText(context, "Задача добавлена", Toast.LENGTH_SHORT).show()
                 dismiss()
             }
+        }
 
-            view.findViewById<ConstraintLayout>(R.id.dialog_content)
-                ?.setOnClickListener {
-                    // Ничего не делаем
-                }
+        private fun validateInput(taskName: String, deadline: String, time: String): Boolean {
+            // Проверка названия задачи
+            if (taskName.isEmpty()) {
+                Toast.makeText(context, "Введите название задачи", Toast.LENGTH_SHORT).show()
+                return false
+            }
+
+            // Проверка даты
+            if (deadline.isEmpty()) {
+                Toast.makeText(context, "Выберите дату", Toast.LENGTH_SHORT).show()
+                return false
+            }
+
+            // Проверка формата даты (должна быть dd.MM.yyyy)
+            val dateRegex = Regex("""^\d{2}\.\d{2}\.\d{4}$""")
+            if (!deadline.matches(dateRegex)) {
+                Toast.makeText(context, "Неверный формат даты. Используйте формат дд.мм.гггг", Toast.LENGTH_SHORT).show()
+                return false
+            }
+
+            // ПРОВЕРКА ВРЕМЕНИ (теперь обязательно)
+            if (time.isEmpty()) {
+                Toast.makeText(context, "Выберите время", Toast.LENGTH_SHORT).show()
+                return false
+            }
+
+            // Проверка формата времени (HH:mm)
+            val timeRegex = Regex("""^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$""")
+            if (!time.matches(timeRegex)) {
+                Toast.makeText(context, "Неверный формат времени. Используйте формат ЧЧ:мм", Toast.LENGTH_SHORT).show()
+                return false
+            }
+
+            return true
         }
     }
 
-    // DialogFragment для редактирования задачи
     class EditTaskDialogFragment(
         private val task: Task,
         private val onTaskUpdated: (Task, Boolean) -> Unit
@@ -362,10 +420,10 @@ class TaskWindowActivity : AppCompatActivity() {
         }
 
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-            val dialog = super.onCreateDialog(savedInstanceState)
-            dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-            dialog.window?.setDimAmount(0.5f)
-            return dialog
+            return super.onCreateDialog(savedInstanceState).apply {
+                window?.setBackgroundDrawableResource(android.R.color.transparent)
+                window?.setDimAmount(0.5f)
+            }
         }
 
         override fun onStart() {
@@ -386,34 +444,60 @@ class TaskWindowActivity : AppCompatActivity() {
             val btnDelete = view.findViewById<FrameLayout>(R.id.btnDelete)
             val btnCancel = view.findViewById<FrameLayout>(R.id.btnCancel)
 
-            // Делаем поля даты и времени не редактируемыми вручную
-            editTextDeadlineTask.isFocusable = false
-            editTextDeadlineTask.isClickable = true
+            setupEditTexts(editTextTaskName, editTextDeadlineTask, editTextDeadlineTimeTask)
+            setupButtons(btnSave, btnDelete, btnCancel, editTextTaskName, editTextDeadlineTask, editTextDeadlineTimeTask)
+        }
 
-            editTextDeadlineTimeTask.isFocusable = false
-            editTextDeadlineTimeTask.isClickable = true
+        private fun setupEditTexts(
+            taskNameEditText: EditText,
+            deadlineEditText: EditText,
+            timeEditText: EditText
+        ) {
+            taskNameEditText.setText(task.title)
+            deadlineEditText.setText(task.deadline)
+            timeEditText.setText(task.time)
 
-            // При клике на поле даты открываем DatePicker
-            editTextDeadlineTask.setOnClickListener {
-                val activity = requireActivity() as TaskWindowActivity
-                activity.showDatePickerDialog(editTextDeadlineTask)
+            deadlineEditText.apply {
+                isFocusable = false
+                isClickable = true
+                setOnClickListener {
+                    (requireActivity() as TaskWindowActivity)
+                        .showDatePickerDialog(this)
+                }
             }
 
-            // При клике на поле времени открываем TimePicker
-            editTextDeadlineTimeTask.setOnClickListener {
-                val activity = requireActivity() as TaskWindowActivity
-                activity.showTimePickerDialog(editTextDeadlineTimeTask)
+            timeEditText.apply {
+                isFocusable = false
+                isClickable = true
+                setOnClickListener {
+                    (requireActivity() as TaskWindowActivity)
+                        .showTimePickerDialog(this)
+                }
             }
+        }
 
-            editTextTaskName.setText(task.title)
-            editTextDeadlineTask.setText(task.deadline)
-            editTextDeadlineTimeTask.setText(task.time)
-
+        private fun setupButtons(
+            btnSave: FrameLayout,
+            btnDelete: FrameLayout,
+            btnCancel: FrameLayout,
+            taskNameEditText: EditText,
+            deadlineEditText: EditText,
+            timeEditText: EditText
+        ) {
             btnSave.setOnClickListener {
+                val updatedTaskName = taskNameEditText.text.toString()
+                val updatedDeadline = deadlineEditText.text.toString()
+                val updatedTime = timeEditText.text.toString()
+
+                // ПРОВЕРКА НА ПУСТЫЕ ПОЛЯ ПРИ РЕДАКТИРОВАНИИ (время теперь обязательно)
+                if (!validateInput(updatedTaskName, updatedDeadline, updatedTime)) {
+                    return@setOnClickListener
+                }
+
                 val updatedTask = task.copy(
-                    title = editTextTaskName.text.toString().trim(),
-                    deadline = editTextDeadlineTask.text.toString().trim(),
-                    time = editTextDeadlineTimeTask.text.toString().trim()
+                    title = updatedTaskName,
+                    deadline = updatedDeadline,
+                    time = updatedTime
                 )
                 onTaskUpdated(updatedTask, false)
                 dismiss()
@@ -427,6 +511,42 @@ class TaskWindowActivity : AppCompatActivity() {
             btnCancel.setOnClickListener {
                 dismiss()
             }
+        }
+
+        private fun validateInput(taskName: String, deadline: String, time: String): Boolean {
+            // Проверка названия задачи
+            if (taskName.isEmpty()) {
+                Toast.makeText(context, "Введите название задачи", Toast.LENGTH_SHORT).show()
+                return false
+            }
+
+            // Проверка даты
+            if (deadline.isEmpty()) {
+                Toast.makeText(context, "Выберите дату", Toast.LENGTH_SHORT).show()
+                return false
+            }
+
+            // Проверка формата даты (должна быть dd.MM.yyyy)
+            val dateRegex = Regex("""^\d{2}\.\d{2}\.\d{4}$""")
+            if (!deadline.matches(dateRegex)) {
+                Toast.makeText(context, "Неверный формат даты. Используйте формат дд.мм.гггг", Toast.LENGTH_SHORT).show()
+                return false
+            }
+
+            // ПРОВЕРКА ВРЕМЕНИ (теперь обязательно)
+            if (time.isEmpty()) {
+                Toast.makeText(context, "Выберите время", Toast.LENGTH_SHORT).show()
+                return false
+            }
+
+            // Проверка формата времени (HH:mm)
+            val timeRegex = Regex("""^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$""")
+            if (!time.matches(timeRegex)) {
+                Toast.makeText(context, "Неверный формат времени. Используйте формат ЧЧ:мм", Toast.LENGTH_SHORT).show()
+                return false
+            }
+
+            return true
         }
     }
 }

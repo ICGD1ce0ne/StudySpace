@@ -111,22 +111,22 @@
 
             <ImageView
                 android:id="@+id/buttonTaskList"
-                android:layout_width="35dp"
-                android:layout_height="35dp"
+                android:layout_width="40dp"
+                android:layout_height="38dp"
                 android:layout_weight="1"
                 android:clickable="true"
                 app:srcCompat="@drawable/icon_task_list" />
 
             <ImageView
                 android:id="@+id/buttonGoal"
-                android:layout_width="35dp"
-                android:layout_height="35dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
-                app:srcCompat="@drawable/icon_goal" />
+                app:srcCompat="@drawable/goal_choosen_icon" />
 
             <ImageView
                 android:id="@+id/buttonAnalytic"
-                android:layout_width="35dp"
+                android:layout_width="40dp"
                 android:layout_height="35dp"
                 android:layout_weight="1"
                 app:srcCompat="@drawable/icon_analytic" />

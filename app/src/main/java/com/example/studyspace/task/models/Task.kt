@@ -21,33 +21,28 @@ data class Task(
         return format.parse(deadline) ?: Date()
     }
 
-    fun getDeadlineDisplayName(): String {
-        return when (deadline) {
-            getTodayDate() -> "Сегодня"
-            getTomorrowDate() -> "Завтра"
-            getAfterTomorrowDate() -> "Послезавтра"
-            else -> deadline
-        }
+    fun getDeadlineDisplayName(): String = when (deadline) {
+        getTodayDate() -> "Сегодня"
+        getTomorrowDate() -> "Завтра"
+        getAfterTomorrowDate() -> "Послезавтра"
+        else -> deadline
     }
 
     companion object {
-        fun getTodayDate(): String {
-            val calendar = Calendar.getInstance()
-            val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-            return dateFormat.format(calendar.time)
-        }
+        private const val DATE_FORMAT = "dd.MM.yyyy"
 
-        fun getTomorrowDate(): String {
-            val calendar = Calendar.getInstance()
-            calendar.add(Calendar.DAY_OF_YEAR, 1)
-            val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-            return dateFormat.format(calendar.time)
-        }
+        fun getTodayDate(): String = formatDate(Calendar.getInstance())
 
-        fun getAfterTomorrowDate(): String {
-            val calendar = Calendar.getInstance()
-            calendar.add(Calendar.DAY_OF_YEAR, 2)
-            val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+        fun getTomorrowDate(): String = formatDate(Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, 1)
+        })
+
+        fun getAfterTomorrowDate(): String = formatDate(Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, 2)
+        })
+
+        private fun formatDate(calendar: Calendar): String {
+            val dateFormat = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
             return dateFormat.format(calendar.time)
         }
     }

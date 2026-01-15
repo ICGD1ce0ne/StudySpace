@@ -13,14 +13,13 @@ import android.view.LayoutInflater
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.example.studyspace.R
 import com.example.studyspace.main.MainActivity
-import com.example.studyspace.task.models.Task
-import com.example.studyspace.task.models.TaskManager
-
 import com.example.studyspace.task.models.FocusSession
 import com.example.studyspace.task.models.StatsManager
-
+import com.example.studyspace.task.models.Task
+import com.example.studyspace.task.models.TaskManager
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -28,21 +27,25 @@ import java.util.UUID
 
 class FocusWindowActivity : AppCompatActivity() {
 
+    // UI элементы
     private lateinit var labelFocus: TextView
     private lateinit var labelNameOfTask: TextView
     private lateinit var labelFocusTimer: TextView
     private lateinit var layoutForStopButton: FrameLayout
     private lateinit var textStopButton: TextView
+
+    // Менеджеры данных
     private lateinit var taskManager: TaskManager
 
-    // MediaPlayer для воспроизведения звуков
+    // Воспроизведение звуков
     private var mediaPlayer: MediaPlayer? = null
 
+    // Состояние таймера
     private var selectedTask: Task? = null
     private var countDownTimer: CountDownTimer? = null
     private var remainingTimeMillis: Long = 0
-    private var totalFocusTimeMillis: Long = 0 // Общее время фокуса (например, 60 мин)
-    private var currentBlockTimeMillis: Long = 0 // Время текущего блока (работа/перерыв)
+    private var totalFocusTimeMillis: Long = 0 // Общее время фокуса
+    private var currentBlockTimeMillis: Long = 0 // Время текущего блока
     private var isTimerRunning = false
     private var isBreakTime = false // true = сейчас перерыв, false = работа
     private var currentBlock = 0 // Текущий блок (0, 1, 2...)
@@ -53,73 +56,94 @@ class FocusWindowActivity : AppCompatActivity() {
     private var isLastMinute = false
 
     companion object {
+        // Ключи для Intent
         const val EXTRA_TASK_ID = "extra_task_id"
         const val EXTRA_TASK_TITLE = "extra_task_title"
         const val EXTRA_TASK_TIME = "extra_task_time"
+
+        // Ключи для SharedPreferences
         const val PREFS_FOCUS = "focus_prefs"
-        const val KEY_REMAINING_TIME = "remaining_time"
-        const val KEY_TASK_ID = "task_id"
-        const val KEY_IS_BREAK = "is_break"
-        const val KEY_CURRENT_BLOCK = "current_block"
-        const val KEY_TOTAL_FOCUS_TIME = "total_focus_time"
-        const val KEY_CURRENT_BLOCK_TIME = "current_block_time"
-        const val EXTRA_SESSION_DURATION = "extra_session_duration"
-        const val EXTRA_SESSION_COMPLETED = "extra_session_completed"
+        private const val KEY_REMAINING_TIME = "remaining_time"
+        private const val KEY_TASK_ID = "task_id"
+        private const val KEY_IS_BREAK = "is_break"
+        private const val KEY_CURRENT_BLOCK = "current_block"
+        private const val KEY_TOTAL_FOCUS_TIME = "total_focus_time"
+        private const val KEY_CURRENT_BLOCK_TIME = "current_block_time"
+
+        // Пользовательские настройки
+        private const val USER_PREFS = "user_preferences"
+        private const val KEY_USER_AGE = "user_age"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_focus_window)
 
+        initViews()
+        initManagers()
+        loadUserAge()
+        loadTaskData()
+        calculateDurations()
+        loadAndSetupTimer()
+        setupListeners()
+    }
+
+    // Инициализация UI элементов
+    private fun initViews() {
         labelFocus = findViewById(R.id.labelFocus)
         labelNameOfTask = findViewById(R.id.labelNameOfTask)
         labelFocusTimer = findViewById(R.id.labelFocusTimer)
         layoutForStopButton = findViewById(R.id.layoutForStopButton)
         textStopButton = findViewById(R.id.textStopButton)
+    }
 
+    // Инициализация менеджеров данных
+    private fun initManagers() {
         taskManager = TaskManager(this)
+    }
 
-        // Получаем возраст пользователя
-        val prefs = getSharedPreferences("user_preferences", Context.MODE_PRIVATE)
-        userAge = prefs.getString("user_age", "25")?.toIntOrNull() ?: 25
+    // Загрузка возраста пользователя
+    private fun loadUserAge() {
+        val prefs = getSharedPreferences(USER_PREFS, Context.MODE_PRIVATE)
+        userAge = prefs.getString(KEY_USER_AGE, "25")?.toIntOrNull() ?: 25
+    }
 
-        // Получаем данные из Intent
+    // Загрузка данных задачи из Intent
+    private fun loadTaskData() {
         val taskId = intent.getStringExtra(EXTRA_TASK_ID)
         val taskTitle = intent.getStringExtra(EXTRA_TASK_TITLE)
-        val taskTime = intent.getStringExtra(EXTRA_TASK_TIME)
 
-        // Находим задачу в базе
+        // Находим задачу в базе по ID
         if (taskId != null) {
             selectedTask = taskManager.getTaskById(taskId)
         }
 
-        initViews(taskTitle ?: "Задача")
-        calculateDurations(taskTime ?: "00:25:00")
-        loadAndSetupTimer()
-        setupListeners()
+        displayTaskTitle(taskTitle ?: "Задача")
     }
 
-    private fun initViews(taskTitle: String) {
+    // Отображение названия задачи
+    private fun displayTaskTitle(taskTitle: String) {
         labelNameOfTask.text = taskTitle
         labelFocusTimer.setTextColor(Color.WHITE)
 
-        // Получаем время из Intent и отображаем его
+        // Отображение времени из Intent
         val taskTime = intent.getStringExtra(EXTRA_TASK_TIME)
         if (!taskTime.isNullOrEmpty()) {
-            // Отображаем время в формате ЧЧ:ММ:СС
-            val formattedTime = formatTimeForDisplay(taskTime)
-            labelFocusTimer.text = formattedTime
+            labelFocusTimer.text = formatTimeForDisplay(taskTime)
         }
     }
 
+    // Форматирование времени для отображения (всегда в ЧЧ:ММ:СС)
     private fun formatTimeForDisplay(timeString: String): String {
         val timeParts = timeString.split(":")
+
         return when (timeParts.size) {
             3 -> timeString // Уже в формате ЧЧ:ММ:СС
             2 -> {
                 // Формат ЧЧ:ММ или ММ:СС
                 val first = timeParts[0].toIntOrNull() ?: 0
                 val second = timeParts[1].toIntOrNull() ?: 0
+
                 if (first < 24 && second < 60) {
                     // ЧЧ:ММ -> добавляем секунды
                     "$timeString:00"
@@ -128,78 +152,79 @@ class FocusWindowActivity : AppCompatActivity() {
                     String.format("00:%02d:%02d", first, second)
                 }
             }
-            else -> "00:25:00"
+            else -> "00:25:00" // Значение по умолчанию
         }
     }
 
-    private fun calculateDurations(totalTimeString: String) {
-        // Преобразуем общее время фокуса в минуты
-        // Формат: "ЧЧ:ММ:СС" или "ЧЧ:ММ" или "ММ:СС"
-        val timeParts = totalTimeString.split(":")
+    // Расчет длительности рабочих блоков и перерывов
+    private fun calculateDurations() {
+        val taskTime = intent.getStringExtra(EXTRA_TASK_TIME) ?: "00:25:00"
+        val totalMinutes = calculateTotalMinutes(taskTime)
 
-        var totalMinutes = 25 // Значение по умолчанию
+        calculateBlockConfiguration(totalMinutes)
+        convertToMilliseconds(totalMinutes)
+    }
 
-        when (timeParts.size) {
+    // Расчет общего времени в минутах из строки времени
+    private fun calculateTotalMinutes(timeString: String): Int {
+        val timeParts = timeString.split(":")
+
+        return when (timeParts.size) {
             3 -> {
-                // Формат "ЧЧ:ММ:СС" (например, 01:30:00 = 1 час 30 минут = 90 минут)
+                // Формат "ЧЧ:ММ:СС"
                 val hours = timeParts[0].toIntOrNull() ?: 0
                 val minutes = timeParts[1].toIntOrNull() ?: 0
-                val seconds = timeParts[2].toIntOrNull() ?: 0
-                totalMinutes = hours * 60 + minutes
-                // Секунды игнорируем при расчете блоков
+                hours * 60 + minutes // Секунды игнорируем
             }
             2 -> {
                 // Формат "ЧЧ:ММ" или "ММ:СС"
                 val firstPart = timeParts[0].toIntOrNull() ?: 0
                 val secondPart = timeParts[1].toIntOrNull() ?: 0
 
-                // Если первая часть меньше 24, а вторая меньше 60, то это ЧЧ:ММ
                 if (firstPart < 24 && secondPart < 60) {
-                    // Формат ЧЧ:ММ (например, 01:30 = 1 час 30 минут = 90 минут)
-                    totalMinutes = firstPart * 60 + secondPart
+                    // Формат ЧЧ:ММ
+                    firstPart * 60 + secondPart
                 } else {
-                    // Формат ММ:СС (например, 90:00 = 90 минут)
-                    totalMinutes = firstPart
+                    // Формат ММ:СС
+                    firstPart
                 }
             }
-            else -> {
-                totalMinutes = 25 // Значение по умолчанию
-            }
+            else -> 25 // Значение по умолчанию
         }
+    }
 
-        println("DEBUG: Общее время в минутах: $totalMinutes")
-
-        // Определяем разумное количество блоков и длительность перерыва
+    // Расчет конфигурации блоков работы/перерывов
+    private fun calculateBlockConfiguration(totalMinutes: Int) {
         when {
             totalMinutes <= 5 -> {
-                // Для очень коротких сессий (до 5 минут) - без перерывов
+                // Очень короткие сессии (до 5 минут) - без перерывов
                 totalBlocks = 1
                 breakDuration = 0
                 workBlockDuration = totalMinutes
             }
             totalMinutes <= 15 -> {
-                // Для коротких сессий (5-15 минут) - 1 перерыв
+                // Короткие сессии (5-15 минут) - 1 перерыв
                 totalBlocks = 2
                 breakDuration = 1 // 1 минута перерыва
                 val totalBreakTime = breakDuration * (totalBlocks - 1)
                 workBlockDuration = if (totalBlocks > 0) (totalMinutes - totalBreakTime) / totalBlocks else totalMinutes
             }
             totalMinutes <= 30 -> {
-                // Для средних сессий (15-30 минут) - 1-2 перерыва
+                // Средние сессии (15-30 минут) - 1-2 перерыва
                 totalBlocks = 2
                 breakDuration = 2 // 2 минуты перерыва
                 val totalBreakTime = breakDuration * (totalBlocks - 1)
                 workBlockDuration = if (totalBlocks > 0) (totalMinutes - totalBreakTime) / totalBlocks else totalMinutes
             }
             totalMinutes <= 60 -> {
-                // Для длинных сессий (30-60 минут) - 2-3 перерыва
+                // Длинные сессии (30-60 минут) - 2-3 перерыва
                 totalBlocks = 3
                 breakDuration = 3 // 3 минуты перерыва
                 val totalBreakTime = breakDuration * (totalBlocks - 1)
                 workBlockDuration = if (totalBlocks > 0) (totalMinutes - totalBreakTime) / totalBlocks else totalMinutes
             }
             else -> {
-                // Для очень длинных сессий (более 60 минут) - максимум 4 блока
+                // Очень длинные сессии (более 60 минут) - максимум 4 блока
                 totalBlocks = 4
                 breakDuration = 5 // 5 минут перерыва
                 val totalBreakTime = breakDuration * (totalBlocks - 1)
@@ -207,49 +232,33 @@ class FocusWindowActivity : AppCompatActivity() {
             }
         }
 
-        // Гарантируем минимальную длительность рабочего блока в 1 минуту
+        // Гарантируем минимальную длительность рабочего блока
         if (workBlockDuration < 1) {
             workBlockDuration = 1
         }
 
-        // Гарантируем, что общее время работы + перерывов не превышает заданное время
+        // Корректировка для точного соответствия общему времени
+        adjustBlockConfiguration(totalMinutes)
+    }
+
+    // Корректировка конфигурации блоков под общее время
+    private fun adjustBlockConfiguration(totalMinutes: Int) {
         val totalCalculatedTime = (workBlockDuration * totalBlocks) + (breakDuration * (totalBlocks - 1))
+
         if (totalCalculatedTime > totalMinutes) {
             // Корректируем: уменьшаем длительность рабочих блоков
             val availableWorkTime = totalMinutes - (breakDuration * (totalBlocks - 1))
             workBlockDuration = if (totalBlocks > 0) availableWorkTime / totalBlocks else totalMinutes
             if (workBlockDuration < 1) workBlockDuration = 1
         }
+    }
 
-        println("DEBUG: Блоков: $totalBlocks, Работа: $workBlockDuration мин, Перерыв: $breakDuration мин")
-
-        // Конвертируем в миллисекунды
+    // Конвертация времени в миллисекунды
+    private fun convertToMilliseconds(totalMinutes: Int) {
         totalFocusTimeMillis = totalMinutes * 60 * 1000L
     }
 
-    private fun saveFocusSession(duration: Long, isCompleted: Boolean) {
-        val statsManager = StatsManager(this)
-
-        val session = FocusSession(
-            id = UUID.randomUUID().toString(),
-            startTime = System.currentTimeMillis() - duration,
-            duration = duration,
-            isCompleted = isCompleted,
-            taskId = selectedTask?.id
-        )
-
-        statsManager.saveSession(session)
-
-        // Обновляем статистику выполненных задач
-        if (isCompleted) {
-            val today = Task.getTodayDate()
-            val taskManager = TaskManager(this)
-            val todayTasks = taskManager.getTodayTasks()
-            val completedToday = todayTasks.count { it.isCompleted }
-            statsManager.updateCompletedTasks(today, completedToday)
-        }
-    }
-
+    // Загрузка и настройка таймера (восстановление состояния)
     private fun loadAndSetupTimer() {
         val prefs = getSharedPreferences(PREFS_FOCUS, MODE_PRIVATE)
         val savedTaskId = prefs.getString(KEY_TASK_ID, null)
@@ -259,41 +268,58 @@ class FocusWindowActivity : AppCompatActivity() {
         val savedCurrentBlockTime = prefs.getLong(KEY_CURRENT_BLOCK_TIME, -1)
 
         if (savedTaskId == selectedTask?.id && savedRemainingTime > 0 && savedCurrentBlockTime > 0) {
-            // Восстанавливаем сохраненную сессию
-            remainingTimeMillis = savedRemainingTime
-            currentBlockTimeMillis = savedCurrentBlockTime
-            isBreakTime = savedIsBreak
-            currentBlock = savedCurrentBlock
-
-            if (isBreakTime) {
-                setupBreakBlock()
-            } else {
-                setupWorkBlock()
-            }
-
-            updateTimerDisplay(remainingTimeMillis)
-
-            if (remainingTimeMillis > 0) {
-                startTimer()
-            }
+            // Восстановление сохраненной сессии
+            restoreTimerState(
+                savedRemainingTime,
+                savedCurrentBlockTime,
+                savedIsBreak,
+                savedCurrentBlock
+            )
         } else {
-            // Начинаем новый фокус с первого рабочего блока
+            // Начало новой сессии фокуса
             startNewSession()
         }
     }
 
+    // Восстановление состояния таймера
+    private fun restoreTimerState(
+        savedRemainingTime: Long,
+        savedCurrentBlockTime: Long,
+        savedIsBreak: Boolean,
+        savedCurrentBlock: Int
+    ) {
+        remainingTimeMillis = savedRemainingTime
+        currentBlockTimeMillis = savedCurrentBlockTime
+        isBreakTime = savedIsBreak
+        currentBlock = savedCurrentBlock
+
+        if (isBreakTime) {
+            setupBreakBlock()
+        } else {
+            setupWorkBlock()
+        }
+
+        updateTimerDisplay(remainingTimeMillis)
+
+        if (remainingTimeMillis > 0) {
+            startTimer()
+        }
+    }
+
+    // Начало новой сессии фокуса
     private fun startNewSession() {
         currentBlock = 0
         isBreakTime = false
         startWorkBlock()
     }
 
+    // Запуск рабочего блока
     private fun startWorkBlock() {
         isBreakTime = false
         currentBlockTimeMillis = workBlockDuration * 60 * 1000L
         remainingTimeMillis = currentBlockTimeMillis
 
-        // Проверяем, что время блока не отрицательное
+        // Гарантируем минимальное время блока
         if (currentBlockTimeMillis <= 0) {
             currentBlockTimeMillis = 60000L // Минимум 1 минута
             remainingTimeMillis = currentBlockTimeMillis
@@ -302,11 +328,11 @@ class FocusWindowActivity : AppCompatActivity() {
         setupWorkBlock()
         updateTimerDisplay(remainingTimeMillis)
         saveTimerState()
-        // Воспроизводим звук начала работы
-        playSound(R.raw.alert)
+        playSound(R.raw.alert) // Звук начала работы
         startTimer()
     }
 
+    // Запуск перерыва
     private fun startBreakBlock() {
         isBreakTime = true
         currentBlockTimeMillis = breakDuration * 60 * 1000L
@@ -314,11 +340,11 @@ class FocusWindowActivity : AppCompatActivity() {
         setupBreakBlock()
         updateTimerDisplay(remainingTimeMillis)
         saveTimerState()
-        // Воспроизводим звук начала перерыва
-        playSound(R.raw.alert)
+        playSound(R.raw.alert) // Звук начала перерыва
         startTimer()
     }
 
+    // Настройка UI для рабочего блока
     private fun setupWorkBlock() {
         labelFocus.text = "Фокус на задаче"
         labelNameOfTask.text = "${selectedTask?.title ?: "Задача"} (Блок ${currentBlock + 1}/$totalBlocks)"
@@ -327,6 +353,7 @@ class FocusWindowActivity : AppCompatActivity() {
         isLastMinute = false
     }
 
+    // Настройка UI для перерыва
     private fun setupBreakBlock() {
         labelFocus.text = "Короткий перерыв"
         labelNameOfTask.text = "Отдыхайте ${breakDuration} мин"
@@ -335,6 +362,7 @@ class FocusWindowActivity : AppCompatActivity() {
         isLastMinute = false
     }
 
+    // Настройка обработчиков кликов
     private fun setupListeners() {
         layoutForStopButton.setOnClickListener {
             if (isBreakTime) {
@@ -345,6 +373,7 @@ class FocusWindowActivity : AppCompatActivity() {
         }
     }
 
+    // Запуск таймера
     private fun startTimer() {
         if (isTimerRunning || remainingTimeMillis <= 0) return
 
@@ -361,45 +390,43 @@ class FocusWindowActivity : AppCompatActivity() {
                 remainingTimeMillis = 0
                 isTimerRunning = false
                 updateTimerDisplay(0)
-
-                // Вибрация при завершении блока
                 vibrateOnCompletion()
-
-                // Определяем, что делать дальше
-                if (isBreakTime) {
-                    // Завершился перерыв
-                    onBreakCompleted()
-                } else {
-                    // Завершился рабочий блок
-                    onWorkBlockCompleted()
-                }
+                handleBlockCompletion()
             }
         }.start()
     }
 
+    // Обработка завершения блока (рабочего или перерыва)
+    private fun handleBlockCompletion() {
+        if (isBreakTime) {
+            onBreakCompleted()
+        } else {
+            onWorkBlockCompleted()
+        }
+    }
+
+    // Завершение рабочего блока
     private fun onWorkBlockCompleted() {
         currentBlock++
 
         if (currentBlock < totalBlocks) {
-            // Есть еще рабочие блоки, показываем перерыв
+            // Еще есть рабочие блоки - показываем перерыв
             showBreakNotification()
         } else {
-            // Все блоки завершены - фокус окончен
+            // Все блоки завершены
             onFocusCompleted()
         }
     }
 
+    // Завершение перерыва
     private fun onBreakCompleted() {
-        // Перерыв завершен, начинаем следующий рабочий блок
-        // Воспроизводим звук начала работы после перерыва
-        playSound(R.raw.alert)
+        playSound(R.raw.alert) // Звук начала работы после перерыва
         startWorkBlock()
     }
 
+    // Завершение всей сессии фокуса
     private fun onFocusCompleted() {
-        // Весь фокус завершен
-        // Воспроизводим звук окончания работы
-        playSound(R.raw.alert)
+        playSound(R.raw.alert) // Звук окончания работы
         markTaskAsCompleted()
         clearTimerState()
 
@@ -409,8 +436,36 @@ class FocusWindowActivity : AppCompatActivity() {
         showFocusCompletedDialog()
     }
 
+    // Сохранение сессии фокуса
+    private fun saveFocusSession(duration: Long, isCompleted: Boolean) {
+        val statsManager = StatsManager(this)
+
+        val session = FocusSession(
+            id = UUID.randomUUID().toString(),
+            startTime = System.currentTimeMillis() - duration,
+            duration = duration,
+            isCompleted = isCompleted,
+            taskId = selectedTask?.id
+        )
+
+        statsManager.saveSession(session)
+
+        // Обновление статистики выполненных задач
+        if (isCompleted) {
+            updateCompletedTasksStats()
+        }
+    }
+
+    // Обновление статистики выполненных задач
+    private fun updateCompletedTasksStats() {
+        val today = Task.getTodayDate()
+        val todayTasks = taskManager.getTodayTasks()
+        val completedToday = todayTasks.count { it.isCompleted }
+        StatsManager(this).updateCompletedTasks(today, completedToday)
+    }
+
+    // Показ уведомления о перерыве
     private fun showBreakNotification() {
-        // Показываем уведомление о перерыве
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_break_notification, null)
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
@@ -440,15 +495,14 @@ class FocusWindowActivity : AppCompatActivity() {
 
         layoutSkipBreakButton.setOnClickListener {
             dialog.dismiss()
-            // Пропускаем перерыв и сразу начинаем следующий рабочий блок
-            // Воспроизводим звук начала работы
-            playSound(R.raw.alert)
+            playSound(R.raw.alert) // Звук начала работы
             startWorkBlock()
         }
 
         dialog.show()
     }
 
+    // Диалог пропуска перерыва
     private fun showSkipBreakDialog() {
         pauseTimer()
 
@@ -456,9 +510,7 @@ class FocusWindowActivity : AppCompatActivity() {
             .setTitle("Пропустить перерыв?")
             .setMessage("Вы уверены, что хотите пропустить перерыв и продолжить работу?")
             .setPositiveButton("Да, продолжить") { _, _ ->
-                // Пропускаем перерыв и начинаем рабочий блок
-                // Воспроизводим звук начала работы
-                playSound(R.raw.alert)
+                playSound(R.raw.alert) // Звук начала работы
                 startWorkBlock()
             }
             .setNegativeButton("Нет, остаться") { _, _ ->
@@ -468,6 +520,7 @@ class FocusWindowActivity : AppCompatActivity() {
             .show()
     }
 
+    // Диалог отмены фокуса
     private fun showCancelFocusDialog() {
         pauseTimer()
 
@@ -497,25 +550,18 @@ class FocusWindowActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    // Метод для воспроизведения звука
+    // Воспроизведение звука
     private fun playSound(soundResourceId: Int) {
         try {
-            // Освобождаем предыдущий MediaPlayer, если он есть
-            mediaPlayer?.release()
-
-            // Создаем новый MediaPlayer
+            mediaPlayer?.release() // Освобождение предыдущего плеера
             mediaPlayer = MediaPlayer.create(this, soundResourceId)
 
-            // Настраиваем слушатель для освобождения ресурсов после завершения
             mediaPlayer?.setOnCompletionListener {
                 it.release()
                 mediaPlayer = null
             }
 
-            // Устанавливаем громкость (50% от максимальной)
-            mediaPlayer?.setVolume(0.5f, 0.5f)
-
-            // Запускаем воспроизведение
+            mediaPlayer?.setVolume(0.5f, 0.5f) // Установка громкости (50%)
             mediaPlayer?.start()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -523,57 +569,80 @@ class FocusWindowActivity : AppCompatActivity() {
         }
     }
 
+    // Пауза таймера
     private fun pauseTimer() {
         countDownTimer?.cancel()
         isTimerRunning = false
         saveTimerState()
     }
 
+    // Возобновление таймера
     private fun resumeTimer() {
         if (remainingTimeMillis > 0 && !isTimerRunning) {
             startTimer()
         }
     }
 
+    // Остановка таймера
     private fun stopTimer() {
         countDownTimer?.cancel()
         isTimerRunning = false
         clearTimerState()
     }
 
+    // Обновление отображения таймера
     private fun updateTimerDisplay(millis: Long) {
-        val totalSeconds = millis / 1000
-        val hours = totalSeconds / 3600
-        val minutes = (totalSeconds % 3600) / 60
-        val seconds = totalSeconds % 60
+        val (hours, minutes, seconds) = calculateTimeComponents(millis)
+        labelFocusTimer.text = formatTimeForDisplay(hours, minutes, seconds)
+        updateTimerColor(millis)
+    }
 
-        // Не даем времени быть отрицательным
+    // Расчет компонентов времени из миллисекунд
+    private fun calculateTimeComponents(millis: Long): Triple<Int, Int, Int> {
+        val totalSeconds = millis / 1000
+        val hours = (totalSeconds / 3600).toInt()
+        val minutes = ((totalSeconds % 3600) / 60).toInt()
+        val seconds = (totalSeconds % 60).toInt()
+
+        // Гарантируем неотрицательные значения
         val safeHours = if (hours < 0) 0 else hours
         val safeMinutes = if (minutes < 0) 0 else minutes
         val safeSeconds = if (seconds < 0) 0 else seconds
 
-        val displayText = if (safeHours > 0) {
-            String.format("%02d:%02d:%02d", safeHours, safeMinutes, safeSeconds)
+        return Triple(safeHours, safeMinutes, safeSeconds)
+    }
+
+    // Форматирование времени для отображения
+    private fun formatTimeForDisplay(hours: Int, minutes: Int, seconds: Int): String {
+        return if (hours > 0) {
+            String.format("%02d:%02d:%02d", hours, minutes, seconds)
         } else {
-            String.format("%02d:%02d", safeMinutes, safeSeconds)
+            String.format("%02d:%02d", minutes, seconds)
         }
+    }
 
-        labelFocusTimer.text = displayText
-
-        // Меняем цвет в последнюю минуту рабочего блока
+    // Обновление цвета таймера
+    private fun updateTimerColor(millis: Long) {
         if (!isBreakTime) {
             val newLastMinute = (millis <= 60000 && millis > 0)
+
             if (newLastMinute != isLastMinute) {
                 isLastMinute = newLastMinute
-                if (isLastMinute) {
-                    labelFocusTimer.setTextColor(Color.RED)
-                } else if (millis > 60000) {
-                    labelFocusTimer.setTextColor(Color.WHITE)
-                }
+
+                labelFocusTimer.setTextColor(
+                    if (isLastMinute) {
+                        Color.RED
+                    } else if (millis > 60000) {
+                        Color.WHITE
+                    } else {
+                        labelFocusTimer.currentTextColor
+                    }
+                )
             }
         }
     }
 
+    // Сохранение состояния таймера
     private fun saveTimerState() {
         val prefs = getSharedPreferences(PREFS_FOCUS, MODE_PRIVATE)
         prefs.edit().apply {
@@ -587,6 +656,7 @@ class FocusWindowActivity : AppCompatActivity() {
         }
     }
 
+    // Очистка состояния таймера
     private fun clearTimerState() {
         val prefs = getSharedPreferences(PREFS_FOCUS, MODE_PRIVATE)
         prefs.edit().apply {
@@ -600,8 +670,10 @@ class FocusWindowActivity : AppCompatActivity() {
         }
     }
 
+    // Вибрация при завершении блока
     private fun vibrateOnCompletion() {
         val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator?
+
         if (vibrator?.hasVibrator() == true) {
             try {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -616,6 +688,7 @@ class FocusWindowActivity : AppCompatActivity() {
         }
     }
 
+    // Отметка задачи как выполненной
     private fun markTaskAsCompleted() {
         selectedTask?.let { task ->
             val updatedTask = task.copy(
@@ -627,13 +700,17 @@ class FocusWindowActivity : AppCompatActivity() {
         }
     }
 
+    // Логирование времени выполнения задачи
     private fun logCompletionTime(taskId: String) {
         val sdf = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
         val completionTime = sdf.format(Date())
-        val prefs = getSharedPreferences("task_completions", MODE_PRIVATE)
-        prefs.edit().putString(taskId, completionTime).apply()
+        getSharedPreferences("task_completions", MODE_PRIVATE)
+            .edit()
+            .putString(taskId, completionTime)
+            .apply()
     }
 
+    // Диалог завершения фокуса
     private fun showFocusCompletedDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_focus_completed, null)
         val dialog = AlertDialog.Builder(this)
@@ -657,64 +734,66 @@ class FocusWindowActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    // Обновление времени задачи при прерывании фокуса
     private fun updateTaskTime() {
         selectedTask?.let { task ->
-            // Если фокус завершен полностью, оставляем 00:00:00
+            // Если фокус завершен полностью
             if (currentBlock >= totalBlocks) {
-                val updatedTask = task.copy(time = "00:00:00")
-                taskManager.updateTask(updatedTask)
+                taskManager.updateTask(task.copy(time = "00:00:00"))
                 return
             }
 
-            // Если сейчас рабочий блок, который мы прервали
-            if (!isBreakTime) {
-                // Преобразуем оставшееся время в секунды
-                val remainingSeconds = remainingTimeMillis / 1000
+            // Расчет оставшегося времени
+            val remainingSeconds = calculateRemainingSeconds()
+            val newTime = formatRemainingTime(remainingSeconds)
 
-                // Плюс все будущие блоки и перерывы
-                val futureWorkBlocks = totalBlocks - currentBlock - 1 // оставшиеся после текущего
-                val futureWorkTime = futureWorkBlocks * workBlockDuration * 60 // в секундах
-                val futureBreaks = futureWorkBlocks // перерывы между будущими блоками
-                val futureBreakTime = futureBreaks * breakDuration * 60 // в секундах
-
-                // Общее оставшееся время в секундах
-                val totalSeconds = remainingSeconds + futureWorkTime + futureBreakTime
-
-                // Конвертируем в формат ЧЧ:ММ:СС
-                val hours = totalSeconds / 3600
-                val minutes = (totalSeconds % 3600) / 60
-                val seconds = totalSeconds % 60
-
-                val newTime = String.format("%02d:%02d:%02d", hours, minutes, seconds)
-
-                val updatedTask = task.copy(time = newTime)
-                taskManager.updateTask(updatedTask)
-            } else {
-                // Если сейчас перерыв, который мы прервали
-                // Оставшееся время перерыва + все будущие рабочие блоки и перерывы
-                val remainingBreakSeconds = remainingTimeMillis / 1000
-
-                val futureWorkBlocks = totalBlocks - currentBlock // оставшиеся рабочие блоки
-                val futureWorkTime = futureWorkBlocks * workBlockDuration * 60 // в секундах
-                val futureBreaks = futureWorkBlocks - 1 // перерывы между будущими блоками
-                val futureBreakTime = futureBreaks * breakDuration * 60 // в секундах
-
-                // Общее оставшееся время в секундах
-                val totalSeconds = remainingBreakSeconds + futureWorkTime + futureBreakTime
-
-                // Конвертируем в формат ЧЧ:ММ:СС
-                val hours = totalSeconds / 3600
-                val minutes = (totalSeconds % 3600) / 60
-                val seconds = totalSeconds % 60
-
-                val newTime = String.format("%02d:%02d:%02d", hours, minutes, seconds)
-
-                val updatedTask = task.copy(time = newTime)
-                taskManager.updateTask(updatedTask)
-            }
+            taskManager.updateTask(task.copy(time = newTime))
         }
     }
 
+    // Расчет оставшихся секунд
+    private fun calculateRemainingSeconds(): Long {
+        val remainingSeconds = remainingTimeMillis / 1000
+
+        return if (!isBreakTime) {
+            // Прерван рабочий блок
+            calculateRemainingWorkSeconds(remainingSeconds)
+        } else {
+            // Прерван перерыв
+            calculateRemainingBreakSeconds(remainingSeconds)
+        }
+    }
+
+    // Расчет оставшихся секунд при прерывании рабочего блока
+    private fun calculateRemainingWorkSeconds(remainingSeconds: Long): Long {
+        val futureWorkBlocks = totalBlocks - currentBlock - 1
+        val futureWorkTime = futureWorkBlocks * workBlockDuration * 60L
+        val futureBreaks = futureWorkBlocks
+        val futureBreakTime = futureBreaks * breakDuration * 60L
+
+        return remainingSeconds + futureWorkTime + futureBreakTime
+    }
+
+    // Расчет оставшихся секунд при прерывании перерыва
+    private fun calculateRemainingBreakSeconds(remainingSeconds: Long): Long {
+        val futureWorkBlocks = totalBlocks - currentBlock
+        val futureWorkTime = futureWorkBlocks * workBlockDuration * 60L
+        val futureBreaks = futureWorkBlocks - 1
+        val futureBreakTime = futureBreaks * breakDuration * 60L
+
+        return remainingSeconds + futureWorkTime + futureBreakTime
+    }
+
+    // Форматирование оставшегося времени
+    private fun formatRemainingTime(totalSeconds: Long): String {
+        val hours = totalSeconds / 3600
+        val minutes = (totalSeconds % 3600) / 60
+        val seconds = totalSeconds % 60
+
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds)
+    }
+
+    // Возврат на главный экран
     private fun returnToMain() {
         val intent = Intent(this, MainActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
@@ -722,6 +801,7 @@ class FocusWindowActivity : AppCompatActivity() {
         finish()
     }
 
+    // Жизненный цикл активности
     override fun onResume() {
         super.onResume()
         if (!isTimerRunning && remainingTimeMillis > 0) {
@@ -737,8 +817,7 @@ class FocusWindowActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         countDownTimer?.cancel()
-        // Освобождаем MediaPlayer при уничтожении активности
-        mediaPlayer?.release()
+        mediaPlayer?.release() // Освобождение ресурсов MediaPlayer
         mediaPlayer = null
     }
 }
