@@ -9,7 +9,7 @@
         android:id="@+id/layoutForTask"
         android:layout_width="match_parent"
         android:layout_height="75dp"
-        android:layout_marginHorizontal="45dp"
+        android:layout_marginHorizontal="20dp"
         android:layout_marginTop="12dp"
         android:background="@drawable/button_background_for_all"
         android:clickable="true"
@@ -36,6 +36,9 @@
                 android:text="Название задачи"
                 android:textColor="#FFFFFF"
                 android:textSize="17sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:singleLine="true"
                 android:layout_weight="1"/>
 
             <ImageView

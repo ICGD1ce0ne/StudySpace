@@ -51,6 +51,7 @@ class StatsManager(private val context: Context) {
     private val gson = Gson()
     private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
     private val monthFormat = SimpleDateFormat("MM.yyyy", Locale.getDefault())
+    private val dateTimeFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
 
     companion object {
         private const val KEY_SESSIONS = "focus_sessions"
@@ -59,7 +60,6 @@ class StatsManager(private val context: Context) {
         private const val KEY_LAST_FOCUS_DATE = "last_focus_date"
         private const val KEY_LONGEST_STREAK = "longest_streak"
         private const val KEY_LAST_ACTIVE_DATE = "last_active_date"
-        private const val KEY_MONTHLY_STATS = "monthly_stats" // Добавлено для разделения по месяцам
     }
 
     fun saveSession(session: FocusSession) {
@@ -87,34 +87,13 @@ class StatsManager(private val context: Context) {
         }
     }
 
-    // МЕСЯЧНАЯ СТАТИСТИКА - исправленный метод
-    fun getCurrentMonthStats(): MonthStats {
-        val calendar = Calendar.getInstance()
-        val monthYear = String.format(Locale.getDefault(), "%02d.%d",
-            calendar.get(Calendar.MONTH) + 1,
-            calendar.get(Calendar.YEAR))
-
-        return getMonthStats(monthYear)
-    }
-
+    // ИСПРАВЛЕННЫЙ метод для получения статистики за месяц
     fun getMonthStats(monthYear: String): MonthStats {
-        // Получаем сессии только для указанного месяца
-        val sessions = getSessionsForMonth(monthYear)
-        val dailyStats = getDailyStatsForMonth(monthYear)
+        // Получаем все сессии за указанный месяц
+        val monthSessions = getSessionsForMonth(monthYear)
+
+        // Получаем задачи для расчета
         val taskManager = TaskManager(context)
-
-        // Расчитываем статистику ТОЛЬКО для этого месяца
-        val totalFocusTime = sessions.sumOf { it.duration }
-        val completedSessions = sessions.count { it.isCompleted }
-        val longestSession = sessions.maxOfOrNull { it.duration } ?: 0L
-
-        // Максимальное время фокуса за день в этом месяце
-        val maxDailyFocusTime = dailyStats.maxOfOrNull { it.totalFocusTime } ?: 0L
-
-        // Стрик рассчитываем на основе всех дней, а не только месяца
-        val currentStreak = calculateCurrentStreak()
-
-        // Статистика задач - можно ограничить только задачами с дедлайном в этом месяце
         val allTasks = taskManager.getTasks()
         val completedTasks = allTasks.count { it.isCompleted }
         val taskCompletionRate = if (allTasks.isNotEmpty()) {
@@ -123,6 +102,36 @@ class StatsManager(private val context: Context) {
             0f
         }
 
+        // Рассчитываем статистику из сессий
+        val dailyStatsMap = mutableMapOf<String, DailyFocusData>()
+
+        // Собираем данные по дням
+        for (session in monthSessions) {
+            if (!session.isCompleted || session.duration <= 0) continue
+
+            val sessionDate = dateFormat.format(Date(session.startTime))
+            val dailyData = dailyStatsMap.getOrPut(sessionDate) { DailyFocusData() }
+
+            dailyData.totalTime += session.duration
+            dailyData.sessionCount++
+            dailyData.longestSession = max(dailyData.longestSession, session.duration)
+        }
+
+        // Рассчитываем итоговую статистику
+        var totalFocusTime = 0L
+        var completedSessions = 0
+        var longestSession = 0L
+        var maxDailyFocusTime = 0L
+
+        for ((_, dailyData) in dailyStatsMap) {
+            totalFocusTime += dailyData.totalTime
+            completedSessions += dailyData.sessionCount
+            longestSession = max(longestSession, dailyData.longestSession)
+            maxDailyFocusTime = max(maxDailyFocusTime, dailyData.totalTime)
+        }
+
+        // Получаем стрики
+        val currentStreak = calculateCurrentStreak()
         val overdueTasks = taskManager.getOverdueTasks().size
 
         return MonthStats(
@@ -138,32 +147,37 @@ class StatsManager(private val context: Context) {
         )
     }
 
-    // ФИКС: Метод для проверки наличия фокуса в определенный день
+    // Вспомогательный класс для сбора дневной статистики
+    private data class DailyFocusData(
+        var totalTime: Long = 0L,
+        var sessionCount: Int = 0,
+        var longestSession: Long = 0L
+    )
+
+    // ИСПРАВЛЕННЫЙ метод для проверки наличия фокуса в определенный день
     fun hadFocusOnDay(dateStr: String): Boolean {
-        // Проверяем через dailyStats, так как они уже агрегированы
-        val dailyStats = getDailyStats()
-        val dailyStat = dailyStats.find { it.date == dateStr }
-        return dailyStat != null && dailyStat.completedSessions > 0
+        // Проверяем через сессии напрямую
+        val sessions = getSessions()
+        for (session in sessions) {
+            if (!session.isCompleted || session.duration <= 0) continue
+
+            val sessionDate = dateFormat.format(Date(session.startTime))
+            if (sessionDate == dateStr) {
+                return true
+            }
+        }
+        return false
     }
 
+    // ИСПРАВЛЕННЫЙ метод для получения сессий за месяц
     private fun getSessionsForMonth(monthYear: String): List<FocusSession> {
         return getSessions().filter { session ->
             try {
+                if (!session.isCompleted || session.duration <= 0) return@filter false
+
                 val date = Date(session.startTime)
                 val sessionMonthYear = monthFormat.format(date)
                 sessionMonthYear == monthYear
-            } catch (e: Exception) {
-                false
-            }
-        }
-    }
-
-    private fun getDailyStatsForMonth(monthYear: String): List<DailyStats> {
-        val allDailyStats = getDailyStats()
-        return allDailyStats.filter { dailyStat ->
-            try {
-                val date = dateFormat.parse(dailyStat.date)
-                date != null && monthFormat.format(date) == monthYear
             } catch (e: Exception) {
                 false
             }
@@ -179,26 +193,41 @@ class StatsManager(private val context: Context) {
         val daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
         val todayFormatted = dateFormat.format(Date())
 
-        // Используем метод hadFocusOnDay для проверки наличия фокуса
         for (day in 1..daysInMonth) {
             val dateStr = String.format(Locale.getDefault(), "%02d.%02d.%d", day, month + 1, year)
-            val hadFocus = hadFocusOnDay(dateStr) // Исправлено: используем метод hadFocusOnDay
 
-            // Получаем статистику за день для отображения времени
-            val dailyStat = getDailyStats().find { it.date == dateStr }
+            // Получаем статистику за день
+            val daySessions = getSessionsForDay(dateStr)
+            val hadFocus = daySessions.isNotEmpty()
+            val totalFocusTime = daySessions.sumOf { it.duration }
+            val completedSessions = daySessions.count { it.isCompleted }
 
             calendarDays.add(
                 CalendarDay(
                     date = dateStr,
                     hasFocusSession = hadFocus,
-                    totalFocusTime = dailyStat?.totalFocusTime ?: 0,
-                    completedSessions = dailyStat?.completedSessions ?: 0,
+                    totalFocusTime = totalFocusTime,
+                    completedSessions = completedSessions,
                     isToday = dateStr == todayFormatted
                 )
             )
         }
 
         return calendarDays
+    }
+
+    // Новый метод: получение сессий за конкретный день
+    private fun getSessionsForDay(dateStr: String): List<FocusSession> {
+        return getSessions().filter { session ->
+            try {
+                if (!session.isCompleted || session.duration <= 0) return@filter false
+
+                val sessionDate = dateFormat.format(Date(session.startTime))
+                sessionDate == dateStr
+            } catch (e: Exception) {
+                false
+            }
+        }
     }
 
     fun getCurrentMonthYear(): Pair<Int, Int> {
@@ -215,7 +244,10 @@ class StatsManager(private val context: Context) {
 
     fun getWeekDays(): List<String> = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс")
 
+    // ИСПРАВЛЕННЫЙ метод обновления дневной статистики
     private fun updateDailyStats(session: FocusSession) {
+        if (!session.isCompleted || session.duration <= 0) return
+
         val sessionDate = dateFormat.format(Date(session.startTime))
         val dailyStats = getDailyStats().toMutableList()
 
@@ -223,8 +255,7 @@ class StatsManager(private val context: Context) {
         if (existingStat != null) {
             val updatedStat = existingStat.copy(
                 totalFocusTime = existingStat.totalFocusTime + session.duration,
-                completedSessions = existingStat.completedSessions +
-                        if (session.isCompleted) 1 else 0
+                completedSessions = existingStat.completedSessions + 1
             )
             dailyStats.remove(existingStat)
             dailyStats.add(updatedStat)
@@ -233,7 +264,7 @@ class StatsManager(private val context: Context) {
                 DailyStats(
                     date = sessionDate,
                     totalFocusTime = session.duration,
-                    completedSessions = if (session.isCompleted) 1 else 0,
+                    completedSessions = 1,
                     completedTasks = 0
                 )
             )
@@ -251,40 +282,73 @@ class StatsManager(private val context: Context) {
             dailyStats.remove(it)
             dailyStats.add(updatedStat)
             saveDailyStats(dailyStats)
+        } ?: run {
+            // Создаем новую запись, если нет статистики за этот день
+            dailyStats.add(
+                DailyStats(
+                    date = date,
+                    totalFocusTime = 0,
+                    completedSessions = 0,
+                    completedTasks = count
+                )
+            )
+            saveDailyStats(dailyStats)
         }
     }
 
-    // ФИКС: Улучшенный расчет стрика
+    // ИСПРАВЛЕННЫЙ расчет стрика
     private fun calculateCurrentStreak(): Int {
-        val dailyStats = getDailyStats()
-        if (dailyStats.isEmpty()) return 0
+        // Получаем дни с фокусом
+        val focusDays = mutableSetOf<String>()
 
-        // Сортируем по дате (новые первыми)
-        val sortedStats = dailyStats.sortedByDescending { it.date }
-        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-        val calendar = Calendar.getInstance()
-
-        var streak = 0
-        var currentDate = calendar.time
-
-        // Проверяем сегодняшний день
-        val todayStr = dateFormat.format(currentDate)
-        val todayStat = sortedStats.find { it.date == todayStr }
-        if (todayStat?.completedSessions ?: 0 > 0) {
-            streak = 1
-        } else {
-            return 0 // Если сегодня нет фокуса, стрик = 0
+        // Собираем дни из сессий
+        getSessions().forEach { session ->
+            if (session.isCompleted && session.duration > 0) {
+                val sessionDate = dateFormat.format(Date(session.startTime))
+                focusDays.add(sessionDate)
+            }
         }
 
-        // Проверяем предыдущие дни
-        while (true) {
-            calendar.add(Calendar.DAY_OF_YEAR, -1)
-            val prevDateStr = dateFormat.format(calendar.time)
-            val prevStat = sortedStats.find { it.date == prevDateStr }
+        // Также добавляем дни из dailyStats (на всякий случай)
+        getDailyStats().forEach { dailyStat ->
+            if (dailyStat.completedSessions > 0) {
+                focusDays.add(dailyStat.date)
+            }
+        }
 
-            if (prevStat?.completedSessions ?: 0 > 0) {
-                streak++
-            } else {
+        if (focusDays.isEmpty()) return 0
+
+        // Преобразуем в список и сортируем
+        val sortedDays = focusDays.toList().sortedDescending()
+
+        // Проверяем сегодняшний день
+        val today = dateFormat.format(Date())
+        if (!sortedDays.contains(today)) {
+            // Если сегодня нет фокуса, стрик = 0
+            return 0
+        }
+
+        // Проверяем последовательные дни
+        var streak = 1
+        val calendar = Calendar.getInstance()
+
+        for (i in 1 until sortedDays.size) {
+            try {
+                val currentDate = dateFormat.parse(sortedDays[i - 1])
+                val prevDate = dateFormat.parse(sortedDays[i])
+
+                if (currentDate != null && prevDate != null) {
+                    calendar.time = currentDate
+                    calendar.add(Calendar.DAY_OF_YEAR, -1)
+                    val expectedPrevDate = dateFormat.format(calendar.time)
+
+                    if (expectedPrevDate == sortedDays[i]) {
+                        streak++
+                    } else {
+                        break
+                    }
+                }
+            } catch (e: Exception) {
                 break
             }
         }
@@ -357,9 +421,9 @@ class StatsManager(private val context: Context) {
             add(Calendar.DAY_OF_YEAR, -1)
         }
         val yesterdayStr = dateFormat.format(yesterday.time)
-        val hadFocusYesterday = getDailyStats().any {
-            it.date == yesterdayStr && it.completedSessions > 0
-        }
+
+        // Проверяем, был ли фокус вчера через сессии
+        val hadFocusYesterday = hadFocusOnDay(yesterdayStr)
 
         if (!hadFocusYesterday) {
             sharedPreferences.edit()

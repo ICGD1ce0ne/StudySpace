@@ -6,6 +6,7 @@ import android.app.TimePickerDialog
 import android.content.Intent
 import android.graphics.Paint
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -65,10 +66,6 @@ class TaskWindowActivity : AppCompatActivity() {
     }
 
     private fun initButtons() {
-        buttonTaskList.setOnClickListener {
-            Toast.makeText(this, "Вы уже в задачах", Toast.LENGTH_SHORT).show()
-        }
-
         buttonGoal.setOnClickListener {
             navigateToMainMenu()
         }
@@ -85,13 +82,13 @@ class TaskWindowActivity : AppCompatActivity() {
     private fun navigateToMainMenu() {
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
-        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
     }
 
     private fun navigateToAnalytics() {
         val intent = Intent(this, AnalyticWindowActivity::class.java)
         startActivity(intent)
-        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
     }
 
     private fun loadTasks() {
@@ -271,10 +268,20 @@ class TaskWindowActivity : AppCompatActivity() {
 
         override fun onStart() {
             super.onStart()
-            dialog?.window?.setLayout(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
+            dialog?.window?.apply {
+                val displayMetrics = DisplayMetrics()
+                activity?.windowManager?.defaultDisplay?.getMetrics(displayMetrics)
+                val screenWidth = displayMetrics.widthPixels
+                val dialogWidth = (screenWidth * 0.85).toInt() // 85% ширины экрана
+
+                setLayout(dialogWidth, ViewGroup.LayoutParams.WRAP_CONTENT)
+                setGravity(Gravity.CENTER)
+
+                // Добавьте отступы для лучшего вида
+                val params = attributes
+                params?.dimAmount = 0.5f
+                attributes = params
+            }
         }
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -428,10 +435,16 @@ class TaskWindowActivity : AppCompatActivity() {
 
         override fun onStart() {
             super.onStart()
-            dialog?.window?.setLayout(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
+            dialog?.window?.apply {
+                // Устанавливаем отступы 20dp с каждой стороны
+                val displayMetrics = DisplayMetrics()
+                activity?.windowManager?.defaultDisplay?.getMetrics(displayMetrics)
+                val screenWidth = displayMetrics.widthPixels
+                val dialogWidth = screenWidth - 65
+
+                setLayout(dialogWidth, ViewGroup.LayoutParams.WRAP_CONTENT)
+                setGravity(Gravity.CENTER)
+            }
         }
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

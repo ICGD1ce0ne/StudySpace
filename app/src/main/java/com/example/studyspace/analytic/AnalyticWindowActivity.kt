@@ -1,5 +1,6 @@
 package com.example.studyspace.analytic
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -18,7 +19,6 @@ import com.example.studyspace.main.MainActivity
 import com.example.studyspace.task.TaskWindowActivity
 import com.example.studyspace.task.models.StatsManager
 import com.example.studyspace.task.models.TaskManager
-import java.text.SimpleDateFormat
 import java.util.*
 
 class AnalyticWindowActivity : AppCompatActivity() {
@@ -100,18 +100,15 @@ class AnalyticWindowActivity : AppCompatActivity() {
         buttonTaskList.setOnClickListener {
             val goToMainMenu = Intent(this, TaskWindowActivity::class.java)
             startActivity(goToMainMenu)
-            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
         }
 
         buttonGoal.setOnClickListener {
             val goToMainMenu = Intent(this, MainActivity::class.java)
             startActivity(goToMainMenu)
-            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
         }
 
-        buttonAnalytic.setOnClickListener {
-            Toast.makeText(this, "Вы уже в аналитике", Toast.LENGTH_SHORT).show()
-        }
 
         // Кнопки навигации по месяцам
         btnPrevMonth.setOnClickListener {
@@ -335,6 +332,10 @@ class AnalyticWindowActivity : AppCompatActivity() {
             // Устанавливаем номер дня
             holder.tvDayNumber.text = dayNumber.toString()
 
+            // Устанавливаем отступы, чтобы текст не прижимался к краям
+            val padding = 8.dpToPx(holder.itemView.context)
+            holder.tvDayNumber.setPadding(padding, padding, padding, padding)
+
             // Проверяем, был ли фокус в этот день
             val hadFocus = day.hasFocusSession && day.completedSessions > 0
 
@@ -345,28 +346,31 @@ class AnalyticWindowActivity : AppCompatActivity() {
                         // Сегодня + был фокус = оранжевый/золотой кружок
                         holder.tvDayNumber.setTextColor(Color.WHITE)
                         holder.tvDayNumber.setBackgroundResource(R.drawable.today_focus_circle)
+                        holder.tvDayNumber.background?.mutate()?.alpha = 255 // Полная непрозрачность
                     } else {
                         // Сегодня, но без фокуса = зеленый кружок
                         holder.tvDayNumber.setTextColor(Color.WHITE)
                         holder.tvDayNumber.setBackgroundResource(R.drawable.today_circle)
+                        holder.tvDayNumber.background?.mutate()?.alpha = 255
                     }
                 }
                 hadFocus -> {
                     // Был фокус (но не сегодня) = желтый кружок
                     holder.tvDayNumber.setTextColor(Color.WHITE)
                     holder.tvDayNumber.setBackgroundResource(R.drawable.focus_circle)
+                    holder.tvDayNumber.background?.mutate()?.alpha = 255
                 }
                 else -> {
                     // Нет фокуса
                     holder.tvDayNumber.setTextColor(Color.parseColor("#CCCCCC"))
-                    holder.tvDayNumber.setBackgroundResource(0) // Без кружка
+                    holder.tvDayNumber.background = null // Полностью убираем фон
                 }
             }
 
             // Если это пустой день (для выравнивания календаря)
             if (dayNumber == 0) {
                 holder.tvDayNumber.text = ""
-                holder.tvDayNumber.setBackgroundResource(0)
+                holder.tvDayNumber.background = null
             }
 
             // Обработчик клика
@@ -375,6 +379,11 @@ class AnalyticWindowActivity : AppCompatActivity() {
                     onDayClickListener?.invoke(day)
                 }
             }
+        }
+
+        // Вспомогательная функция для преобразования dp в пиксели
+        private fun Int.dpToPx(context: Context): Int {
+            return (this * context.resources.displayMetrics.density).toInt()
         }
 
         override fun getItemCount(): Int = days.size

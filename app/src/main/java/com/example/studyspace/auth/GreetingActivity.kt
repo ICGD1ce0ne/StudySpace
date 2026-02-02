@@ -119,8 +119,8 @@ class GreetingActivity : AppCompatActivity() {
         val intent = Intent(this, SignUpActivity::class.java)
         val options = ActivityOptionsCompat.makeCustomAnimation(
             this,
-            R.anim.slide_in_right,
-            R.anim.slide_out_left
+            R.anim.fade_in,
+            R.anim.fade_out
         )
         ContextCompat.startActivity(this, intent, options.toBundle())
         finish()

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/dialog_content"
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:id="@+id/dialog_content"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_gravity="center"
@@ -7,219 +8,235 @@
     android:background="@drawable/fragment_background_for_task_dialog"
     android:clickable="true"
     android:focusable="true"
+    android:maxWidth="450dp"
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Остальной код остается без изменений -->
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        tools:ignore="MissingConstraints">
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:overScrollMode="never"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_max="450dp"
+        app:layout_constraintWidth_percent="0.85">
 
-        <TextView
-            android:id="@+id/labelCreateTask"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:fontFamily="@font/montserrat_semibold"
-            android:gravity="center_horizontal"
-            android:text="Создать задачу"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp" />
-
-        <FrameLayout
-            android:id="@+id/layoutForTaskNameInput"
-            android:layout_width="match_parent"
-            android:layout_height="55dp"
-            android:layout_marginTop="17dp"
-            android:layout_marginHorizontal="30dp"
-            android:background="@drawable/fragment_background_for_input_pole">
-
-            <EditText
-                android:id="@+id/editTextTaskName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginHorizontal="13dp"
-                android:background="@android:color/transparent"
-                android:ems="10"
-                android:fontFamily="@font/montserrat_light"
-                android:hint="Название задачи"
-                android:inputType="text"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#FFFFFF"
-                android:textSize="16sp" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:id="@+id/layoutForDeadlineTaskInput"
-            android:layout_width="match_parent"
-            android:layout_height="55dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginHorizontal="30dp"
-            android:background="@drawable/fragment_background_for_input_pole">
-
-            <EditText
-                android:id="@+id/editTextDeadlineTask"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginHorizontal="13dp"
-                android:background="@android:color/transparent"
-                android:ems="10"
-                android:fontFamily="@font/montserrat_light"
-                android:hint="Дата дедлайна"
-                android:inputType="text"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#FFFFFF"
-                android:textSize="16sp" />
-        </FrameLayout>
-
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="55dp"
-            android:layout_marginTop="7.5dp"
-            android:scrollbars="none">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <!-- Кнопка "Сегодня" -->
-                <FrameLayout
-                    android:id="@+id/layoutForTodayButton"
-                    android:layout_width="130dp"
-                    android:layout_height="50dp"
-                    android:layout_marginStart="30dp"
-                    android:background="@drawable/button_background_for_all"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <TextView
-                        android:id="@+id/textTodayButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:fontFamily="@font/montserrat_light"
-                        android:text="Сегодня"
-                        android:textColor="#FFFFFF"
-                        android:textSize="15sp" />
-                </FrameLayout>
-
-                <!-- Кнопка "Завтра" -->
-                <FrameLayout
-                    android:id="@+id/layoutForTomorrowButton"
-                    android:layout_width="130dp"
-                    android:layout_height="50dp"
-                    android:layout_marginStart="7.5dp"
-                    android:background="@drawable/button_background_for_all"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <TextView
-                        android:id="@+id/textTomorrowButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:fontFamily="@font/montserrat_light"
-                        android:text="Завтра"
-                        android:textColor="#FFFFFF"
-                        android:textSize="15sp" />
-                </FrameLayout>
-
-                <!-- Кнопка "Послезавтра" -->
-                <FrameLayout
-                    android:id="@+id/layoutForAfterTomorrowButton"
-                    android:layout_width="130dp"
-                    android:layout_height="50dp"
-                    android:layout_marginStart="7.5dp"
-                    android:background="@drawable/button_background_for_all"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <TextView
-                        android:id="@+id/textAfterTomorrowButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:fontFamily="@font/montserrat_light"
-                        android:text="Послезавтра"
-                        android:textColor="#FFFFFF"
-                        android:textSize="15sp" />
-                </FrameLayout>
-
-                <!-- Кнопка "Другой" -->
-                <FrameLayout
-                    android:id="@+id/layoutForOtherButton"
-                    android:layout_width="130dp"
-                    android:layout_height="50dp"
-                    android:layout_marginStart="7.5dp"
-                    android:layout_marginEnd="30dp"
-                    android:background="@drawable/button_background_for_all"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <TextView
-                        android:id="@+id/textOtherButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:fontFamily="@font/montserrat_light"
-                        android:text="Другой"
-                        android:textColor="#FFFFFF"
-                        android:textSize="15sp" />
-                </FrameLayout>
-
-            </LinearLayout>
-        </HorizontalScrollView>
-
-        <FrameLayout
-            android:id="@+id/layoutForDeadlineTimeTaskInput"
-            android:layout_width="match_parent"
-            android:layout_height="55dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginHorizontal="30dp"
-            android:background="@drawable/fragment_background_for_input_pole">
-
-            <EditText
-                android:id="@+id/editTextDeadlineTimeTask"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginHorizontal="13dp"
-                android:background="@android:color/transparent"
-                android:ems="10"
-                android:fontFamily="@font/montserrat_light"
-                android:hint="Время на задачу"
-                android:inputType="text"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#FFFFFF"
-                android:textSize="16sp" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:id="@+id/layoutForNextButton"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:layout_marginHorizontal="45dp"
-            android:layout_marginTop="32dp"
-            android:layout_marginBottom="32dp"
-            android:background="@drawable/button_background_for_all"
-            android:clickable="true"
-            android:focusable="true">
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/textNextButton"
-                android:layout_width="wrap_content"
+                android:id="@+id/labelCreateTask"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:fontFamily="@font/montserrat"
-                android:text="Добавить задачу"
+                android:layout_marginTop="32dp"
+                android:fontFamily="@font/montserrat_semibold"
+                android:gravity="center_horizontal"
+                android:text="Создать задачу"
                 android:textColor="#FFFFFF"
-                android:textSize="16sp" />
-        </FrameLayout>
-    </LinearLayout>
+                android:textSize="20sp" />
+
+            <FrameLayout
+                android:id="@+id/layoutForTaskNameInput"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginHorizontal="30dp"
+                android:background="@drawable/fragment_background_for_input_pole">
+
+                <EditText
+                    android:id="@+id/editTextTaskName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginHorizontal="13dp"
+                    android:background="@android:color/transparent"
+                    android:ems="10"
+                    android:fontFamily="@font/montserrat_light"
+                    android:hint="Название задачи"
+                    android:inputType="text"
+                    android:maxLength="50"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#FFFFFF"
+                    android:textSize="16sp" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/layoutForDeadlineTaskInput"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginHorizontal="30dp"
+                android:background="@drawable/fragment_background_for_input_pole">
+
+                <EditText
+                    android:id="@+id/editTextDeadlineTask"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginHorizontal="13dp"
+                    android:background="@android:color/transparent"
+                    android:ems="10"
+                    android:fontFamily="@font/montserrat_light"
+                    android:hint="Дата дедлайна"
+                    android:inputType="text"
+                    android:maxLength="30"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#FFFFFF"
+                    android:textSize="16sp" />
+            </FrameLayout>
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:layout_marginTop="10dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <!-- Кнопка "Сегодня" -->
+                    <FrameLayout
+                        android:id="@+id/layoutForTodayButton"
+                        android:layout_width="130dp"
+                        android:layout_height="50dp"
+                        android:layout_marginStart="30dp"
+                        android:background="@drawable/button_background_for_all"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <TextView
+                            android:id="@+id/textTodayButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:fontFamily="@font/montserrat_light"
+                            android:text="Сегодня"
+                            android:textColor="#FFFFFF"
+                            android:textSize="15sp" />
+                    </FrameLayout>
+
+                    <!-- Кнопка "Завтра" -->
+                    <FrameLayout
+                        android:id="@+id/layoutForTomorrowButton"
+                        android:layout_width="130dp"
+                        android:layout_height="50dp"
+                        android:layout_marginStart="7.5dp"
+                        android:background="@drawable/button_background_for_all"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <TextView
+                            android:id="@+id/textTomorrowButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:fontFamily="@font/montserrat_light"
+                            android:text="Завтра"
+                            android:textColor="#FFFFFF"
+                            android:textSize="15sp" />
+                    </FrameLayout>
+
+                    <!-- Кнопка "Послезавтра" -->
+                    <FrameLayout
+                        android:id="@+id/layoutForAfterTomorrowButton"
+                        android:layout_width="130dp"
+                        android:layout_height="50dp"
+                        android:layout_marginStart="7.5dp"
+                        android:background="@drawable/button_background_for_all"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <TextView
+                            android:id="@+id/textAfterTomorrowButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:fontFamily="@font/montserrat_light"
+                            android:text="Послезавтра"
+                            android:textColor="#FFFFFF"
+                            android:textSize="15sp" />
+                    </FrameLayout>
+
+                    <!-- Кнопка "Другой" -->
+                    <FrameLayout
+                        android:id="@+id/layoutForOtherButton"
+                        android:layout_width="130dp"
+                        android:layout_height="50dp"
+                        android:layout_marginStart="7.5dp"
+                        android:layout_marginEnd="30dp"
+                        android:background="@drawable/button_background_for_all"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <TextView
+                            android:id="@+id/textOtherButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:fontFamily="@font/montserrat_light"
+                            android:text="Другой"
+                            android:textColor="#FFFFFF"
+                            android:textSize="15sp" />
+                    </FrameLayout>
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <FrameLayout
+                android:id="@+id/layoutForDeadlineTimeTaskInput"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginHorizontal="30dp"
+                android:background="@drawable/fragment_background_for_input_pole">
+
+                <EditText
+                    android:id="@+id/editTextDeadlineTimeTask"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginHorizontal="13dp"
+                    android:background="@android:color/transparent"
+                    android:ems="10"
+                    android:fontFamily="@font/montserrat_light"
+                    android:hint="Время на задачу"
+                    android:inputType="text"
+                    android:maxLength="20"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#FFFFFF"
+                    android:textSize="16sp" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/layoutForNextButton"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginHorizontal="45dp"
+                android:layout_marginTop="32dp"
+                android:layout_marginBottom="32dp"
+                android:background="@drawable/button_background_for_all"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:id="@+id/textNextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:fontFamily="@font/montserrat"
+                    android:text="Добавить задачу"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp" />
+            </FrameLayout>
+        </LinearLayout>
+    </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

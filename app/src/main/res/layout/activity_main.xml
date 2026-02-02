@@ -1,61 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#1A1A1A">
 
     <TextView
         android:id="@+id/textView"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="45dp"
+        android:layout_marginTop="40dp"
         android:fontFamily="@font/montserrat_semibold"
         android:text="Текущая сессия"
         android:textColor="#FFFFFF"
-        android:textSize="20sp"
+        android:textSize="22sp"
+        android:gravity="center"
+        android:maxLines="1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_max="300dp"
+        app:layout_constraintWidth_percent="0.9" />
 
     <TextView
         android:id="@+id/labelFocusTimer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
         android:fontFamily="@font/montserrat_semibold"
         android:text="--:--"
         android:textColor="#FFFFFF"
-        android:textSize="52sp"
+        android:textSize="56sp"
+        android:gravity="center"
+        android:letterSpacing="0.05"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView" />
 
     <TextView
         android:id="@+id/labelNameOfTask"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginHorizontal="24dp"
         android:fontFamily="@font/montserrat"
         android:text="Нет текущих сессий"
         android:textColor="#FFFFFF"
         android:textSize="18sp"
-        android:layout_marginHorizontal="45dp"
-        android:gravity="center_horizontal"
+        android:gravity="center"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:singleLine="true"
+        app:layout_constraintWidth_max="300dp"
+        app:layout_constraintWidth_percent="0.9"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/labelFocusTimer" />
 
     <FrameLayout
         android:id="@+id/layoutForNextButton"
-        android:layout_width="match_parent"
-        android:layout_height="55dp"
-        android:layout_marginHorizontal="65dp"
-        android:layout_marginTop="12dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="28dp"
         android:background="@drawable/button_background_for_all"
         android:clickable="true"
         android:focusable="true"
+        android:minHeight="56dp"
+        android:paddingVertical="14dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/labelNameOfTask">
+        app:layout_constraintTop_toBottomOf="@+id/labelNameOfTask"
+        app:layout_constraintWidth_max="300dp"
+        app:layout_constraintWidth_percent="0.8">
 
         <TextView
             android:id="@+id/textNextButton"
@@ -65,43 +82,50 @@
             android:fontFamily="@font/montserrat"
             android:text="Старт"
             android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textStyle="bold" />
     </FrameLayout>
 
     <ScrollView
         android:id="@+id/scrollView3"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginVertical="12dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="12dp"
         android:overScrollMode="never"
         android:scrollbars="none"
+        app:layout_constraintWidth_max="450dp"
+        app:layout_constraintWidth_percent="0.92"
         app:layout_constraintBottom_toTopOf="@+id/layoutForButtons"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/layoutForNextButton">
 
         <LinearLayout
+            android:id="@+id/scrollContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
-            android:orientation="vertical">
-
-        </LinearLayout>
+            android:orientation="vertical"
+            android:padding="8dp" />
 
     </ScrollView>
 
     <FrameLayout
         android:id="@+id/layoutForButtons"
         android:layout_width="0dp"
-        android:layout_height="70dp"
-        android:layout_marginHorizontal="20dp"
+        android:layout_height="wrap_content"
         android:layout_marginBottom="20dp"
         android:background="@drawable/button_background_for_all"
         android:clickable="true"
         android:focusable="true"
+        android:minHeight="64dp"
+        android:paddingVertical="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintWidth_max="450dp"
+        app:layout_constraintWidth_percent="0.92">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -112,24 +136,53 @@
             <ImageView
                 android:id="@+id/buttonTaskList"
                 android:layout_width="40dp"
-                android:layout_height="38dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
                 android:clickable="true"
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true"
+                android:maxWidth="46dp"
+                android:maxHeight="46dp"
                 app:srcCompat="@drawable/icon_task_list" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="0dp"
+                android:layout_marginHorizontal="12dp"
+                android:background="#FFFFFF"
+                android:alpha="0.3"
+                android:layout_weight="0" />
 
             <ImageView
                 android:id="@+id/buttonGoal"
                 android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_height="42dp"
                 android:layout_weight="1"
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true"
+                android:maxWidth="48dp"
+                android:maxHeight="48dp"
                 app:srcCompat="@drawable/goal_choosen_icon" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="0dp"
+                android:layout_marginHorizontal="12dp"
+                android:background="#FFFFFF"
+                android:alpha="0.3"
+                android:layout_weight="0" />
 
             <ImageView
                 android:id="@+id/buttonAnalytic"
                 android:layout_width="40dp"
-                android:layout_height="35dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true"
+                android:maxWidth="46dp"
+                android:maxHeight="46dp"
                 app:srcCompat="@drawable/icon_analytic" />
         </LinearLayout>
     </FrameLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

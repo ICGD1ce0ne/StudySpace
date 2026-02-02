@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/dialog_content"
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:id="@+id/dialog_content"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_gravity="center"
@@ -7,176 +8,223 @@
     android:background="@drawable/fragment_background_for_task_dialog"
     android:clickable="true"
     android:focusable="true"
+    android:maxWidth="450dp"
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Остальной код остается без изменений -->
-    <LinearLayout
-        android:layout_width="match_parent"
+    <ScrollView
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        tools:ignore="MissingConstraints">
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:overScrollMode="never"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_max="450dp"
+        app:layout_constraintWidth_percent="0.85">
 
-        <TextView
-            android:id="@+id/labelRedactTask"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:fontFamily="@font/montserrat_semibold"
-            android:gravity="center_horizontal"
-            android:text="Редактирование задачи"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp" />
-
-        <FrameLayout
-            android:id="@+id/layoutForTaskNameInput"
-            android:layout_width="match_parent"
-            android:layout_height="55dp"
-            android:layout_marginTop="17dp"
-            android:layout_marginHorizontal="30dp"
-            android:background="@drawable/fragment_background_for_input_pole">
-
-            <EditText
-                android:id="@+id/editTextTaskName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginHorizontal="13dp"
-                android:background="@android:color/transparent"
-                android:ems="10"
-                android:fontFamily="@font/montserrat_light"
-                android:hint="Название задачи"
-                android:inputType="text"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#FFFFFF"
-                android:textSize="16sp" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:id="@+id/layoutForDeadlineTaskInput"
-            android:layout_width="match_parent"
-            android:layout_height="55dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginHorizontal="30dp"
-            android:background="@drawable/fragment_background_for_input_pole">
-
-            <EditText
-                android:id="@+id/editTextDeadlineTask"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginHorizontal="13dp"
-                android:background="@android:color/transparent"
-                android:ems="10"
-                android:fontFamily="@font/montserrat_light"
-                android:hint="Дата дедлайна"
-                android:inputType="text"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#FFFFFF"
-                android:textSize="16sp" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:id="@+id/layoutForDeadlineTimeTaskInput"
-            android:layout_width="match_parent"
-            android:layout_height="55dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginHorizontal="30dp"
-            android:background="@drawable/fragment_background_for_input_pole">
-
-            <EditText
-                android:id="@+id/editTextDeadlineTimeTask"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginHorizontal="13dp"
-                android:background="@android:color/transparent"
-                android:ems="10"
-                android:fontFamily="@font/montserrat_light"
-                android:hint="Время на задачу"
-                android:inputType="text"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#FFFFFF"
-                android:textSize="16sp" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:id="@+id/btnCancel"
-            android:layout_width="match_parent"
-            android:layout_height="55dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginHorizontal="30dp"
-            android:background="@drawable/button_background_for_all"
-            android:clickable="true"
-            android:focusable="true">
+            android:layout_height="wrap_content">
 
             <TextView
-                android:id="@+id/textCancelButton"
-                android:layout_width="wrap_content"
+                android:id="@+id/labelRedactTask"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:fontFamily="@font/montserrat"
-                android:text="Отменить"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="32dp"
+                android:fontFamily="@font/montserrat_semibold"
+                android:gravity="center"
+                android:text="Редактирование задачи"
                 android:textColor="#FFFFFF"
-                android:textSize="16sp" />
-        </FrameLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="45dp">
+                android:textSize="20sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <FrameLayout
-                android:id="@+id/btnSave"
+                android:id="@+id/layoutForTaskNameInput"
                 android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_marginStart="30dp"
-                android:layout_marginTop="10dp"
-                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/fragment_background_for_input_pole"
+                android:minHeight="56dp"
+                android:paddingVertical="14dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/labelRedactTask">
+
+                <EditText
+                    android:id="@+id/editTextTaskName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginHorizontal="16dp"
+                    android:background="@android:color/transparent"
+                    android:fontFamily="@font/montserrat_light"
+                    android:hint="Название задачи"
+                    android:inputType="text"
+                    android:maxLength="50"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#FFFFFF"
+                    android:textSize="16sp"
+                    android:singleLine="true"
+                    android:maxLines="1" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/layoutForDeadlineTaskInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/fragment_background_for_input_pole"
+                android:minHeight="56dp"
+                android:paddingVertical="14dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/layoutForTaskNameInput">
+
+                <EditText
+                    android:id="@+id/editTextDeadlineTask"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginHorizontal="16dp"
+                    android:background="@android:color/transparent"
+                    android:fontFamily="@font/montserrat_light"
+                    android:hint="Дата дедлайна"
+                    android:inputType="text"
+                    android:maxLength="30"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#FFFFFF"
+                    android:textSize="16sp"
+                    android:singleLine="true"
+                    android:maxLines="1" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/layoutForDeadlineTimeTaskInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/fragment_background_for_input_pole"
+                android:minHeight="56dp"
+                android:paddingVertical="14dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/layoutForDeadlineTaskInput">
+
+                <EditText
+                    android:id="@+id/editTextDeadlineTimeTask"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginHorizontal="16dp"
+                    android:background="@android:color/transparent"
+                    android:fontFamily="@font/montserrat_light"
+                    android:hint="Время на задачу"
+                    android:inputType="text"
+                    android:maxLength="20"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#FFFFFF"
+                    android:textSize="16sp"
+                    android:singleLine="true"
+                    android:maxLines="1" />
+            </FrameLayout>
+
+            <!-- Сначала кнопки Сохранить и Удалить -->
+            <LinearLayout
+                android:id="@+id/bottomButtonsLayout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:orientation="horizontal"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/layoutForDeadlineTimeTaskInput">
+
+                <FrameLayout
+                    android:id="@+id/btnSave"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/button_background_for_all"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:minHeight="56dp"
+                    android:paddingVertical="14dp">
+
+                    <TextView
+                        android:id="@+id/textSaveButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:fontFamily="@font/montserrat"
+                        android:text="Сохранить"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp" />
+                </FrameLayout>
+
+                <View
+                    android:id="@+id/view"
+                    android:layout_width="12dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="0" />
+
+                <FrameLayout
+                    android:id="@+id/btnDelete"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/button_background_for_all"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:minHeight="56dp"
+                    android:paddingVertical="14dp">
+
+                    <TextView
+                        android:id="@+id/textDeleteButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:fontFamily="@font/montserrat"
+                        android:text="Удалить"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- Потом кнопка Отменить -->
+            <FrameLayout
+                android:id="@+id/btnCancel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="32dp"
                 android:background="@drawable/button_background_for_all"
                 android:clickable="true"
-                android:focusable="true">
+                android:focusable="true"
+                android:minHeight="56dp"
+                android:paddingVertical="14dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/bottomButtonsLayout"
+                app:layout_constraintBottom_toBottomOf="parent">
 
                 <TextView
-                    android:id="@+id/textSaveButton"
+                    android:id="@+id/textCancelButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:fontFamily="@font/montserrat"
-                    android:text="Сохранить"
+                    android:text="Отменить"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp" />
+                    android:textSize="15sp" />
             </FrameLayout>
 
-            <View
-                android:id="@+id/view"
-                android:layout_width="10dp"
-                android:layout_height="60dp"
-                android:layout_marginTop="10dp"
-                android:layout_weight="0" />
-
-            <FrameLayout
-                android:id="@+id/btnDelete"
-                android:layout_width="0dp"
-                android:layout_height="60dp"
-                android:layout_marginEnd="30dp"
-                android:layout_marginTop="10dp"
-                android:layout_weight="1"
-                android:background="@drawable/button_background_for_all"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:id="@+id/textDeleteButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:fontFamily="@font/montserrat"
-                    android:text="Удалить"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp" />
-            </FrameLayout>
-        </LinearLayout>
-    </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

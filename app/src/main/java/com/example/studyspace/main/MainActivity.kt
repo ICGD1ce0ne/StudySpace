@@ -87,18 +87,14 @@ class MainActivity : AppCompatActivity() {
         // Переход к списку задач
         buttonTaskList.setOnClickListener {
             startActivity(Intent(this, TaskWindowActivity::class.java))
-            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
         }
 
-        // Текущая страница (главная)
-        buttonGoal.setOnClickListener {
-            Toast.makeText(this, "Вы уже в главном меню", Toast.LENGTH_SHORT).show()
-        }
 
         // Переход к аналитике
         buttonAnalytic.setOnClickListener {
             startActivity(Intent(this, AnalyticWindowActivity::class.java))
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
         }
 
         // Старт сессии фокуса
@@ -398,6 +394,7 @@ class MainActivity : AppCompatActivity() {
                 putExtra(FocusWindowActivity.EXTRA_TASK_TIME, time)
             }
             startActivity(intent)
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
         } ?: run {
             Toast.makeText(this, "Выберите задачу для фокуса", Toast.LENGTH_SHORT).show()
         }

@@ -9,7 +9,9 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.view.Gravity
 import android.view.LayoutInflater
+import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -506,18 +508,42 @@ class FocusWindowActivity : AppCompatActivity() {
     private fun showSkipBreakDialog() {
         pauseTimer()
 
-        AlertDialog.Builder(this)
-            .setTitle("Пропустить перерыв?")
-            .setMessage("Вы уверены, что хотите пропустить перерыв и продолжить работу?")
-            .setPositiveButton("Да, продолжить") { _, _ ->
-                playSound(R.raw.alert) // Звук начала работы
-                startWorkBlock()
-            }
-            .setNegativeButton("Нет, остаться") { _, _ ->
-                resumeTimer()
-            }
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_cancel_break, null)
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
             .setCancelable(false)
-            .show()
+            .create()
+
+        // Настройка окна диалога
+        dialog.window?.apply {
+            setBackgroundDrawableResource(android.R.color.transparent)
+
+            // Установка параметров для центрирования
+            val params = attributes
+            params?.width = WindowManager.LayoutParams.WRAP_CONTENT
+            params?.height = WindowManager.LayoutParams.WRAP_CONTENT
+            params?.gravity = Gravity.CENTER
+            params?.horizontalMargin = 0.1f // 10% отступы по горизонтали
+            attributes = params
+        }
+
+        // Находим элементы
+        val layoutBackButton = dialogView.findViewById<FrameLayout>(R.id.layoutBackButton)
+        val layoutCancelButton = dialogView.findViewById<FrameLayout>(R.id.layoutCancelButton)
+
+        // Устанавливаем слушатели
+        layoutBackButton.setOnClickListener {
+            dialog.dismiss()
+            resumeTimer()
+        }
+
+        layoutCancelButton.setOnClickListener {
+            dialog.dismiss()
+            playSound(R.raw.alert)
+            startWorkBlock()
+        }
+
+        dialog.show()
     }
 
     // Диалог отмены фокуса
@@ -530,7 +556,18 @@ class FocusWindowActivity : AppCompatActivity() {
             .setCancelable(false)
             .create()
 
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        // Настройка окна диалога
+        dialog.window?.apply {
+            setBackgroundDrawableResource(android.R.color.transparent)
+
+            // Установка параметров для центрирования
+            val params = attributes
+            params?.width = WindowManager.LayoutParams.WRAP_CONTENT
+            params?.height = WindowManager.LayoutParams.WRAP_CONTENT
+            params?.gravity = Gravity.CENTER
+            params?.horizontalMargin = 0.1f // 10% отступы по горизонтали
+            attributes = params
+        }
 
         val layoutBackButton = dialogView.findViewById<FrameLayout>(R.id.layoutBackButton)
         val layoutCancelButton = dialogView.findViewById<FrameLayout>(R.id.layoutCancelButton)
@@ -718,7 +755,11 @@ class FocusWindowActivity : AppCompatActivity() {
             .setCancelable(false)
             .create()
 
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.window?.setBackgroundDrawableResource(R.drawable.fragment_background_for_task_dialog)
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.85).toInt(),
+            android.view.WindowManager.LayoutParams.WRAP_CONTENT
+        )
 
         val layoutBackToMainButton = dialogView.findViewById<FrameLayout>(R.id.layoutBackToMainButton)
 
@@ -798,6 +839,7 @@ class FocusWindowActivity : AppCompatActivity() {
         val intent = Intent(this, MainActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(intent)
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
         finish()
     }
 

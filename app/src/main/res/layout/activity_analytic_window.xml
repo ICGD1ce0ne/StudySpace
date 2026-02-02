@@ -11,20 +11,19 @@
         android:id="@+id/contentContainer"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginHorizontal="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/layoutForButtons"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintWidth_max="500dp">
+        app:layout_constraintWidth_max="450dp"
+        app:layout_constraintWidth_percent="0.92">
 
         <ScrollView
             android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="-10dp"
             android:overScrollMode="never"
             android:scrollbars="none"
-            android:layout_marginBottom="5dp"
-            app:layout_constraintBottom_toTopOf="@+id/layoutForButtons"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
@@ -32,20 +31,19 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingHorizontal="5dp">
+                android:orientation="vertical">
 
                 <!-- Заголовок -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="45dp"
-                    android:layout_marginBottom="20dp"
+                    android:layout_marginTop="40dp"
+                    android:layout_marginBottom="24dp"
                     android:fontFamily="@font/montserrat_semibold"
                     android:text="Аналитика"
                     android:textColor="#FFFFFF"
-                    android:textSize="20sp" />
+                    android:textSize="22sp" />
 
                 <!-- Календарь стриков -->
                 <androidx.cardview.widget.CardView
@@ -84,6 +82,8 @@
                                 android:layout_height="24dp"
                                 android:layout_alignParentStart="true"
                                 android:layout_centerVertical="true"
+                                android:adjustViewBounds="true"
+                                android:scaleType="fitCenter"
                                 android:src="@drawable/ic_arrow_left" />
 
                             <TextView
@@ -102,6 +102,8 @@
                                 android:layout_height="24dp"
                                 android:layout_alignParentEnd="true"
                                 android:layout_centerVertical="true"
+                                android:adjustViewBounds="true"
+                                android:scaleType="fitCenter"
                                 android:src="@drawable/ic_arrow_right" />
                         </RelativeLayout>
 
@@ -434,7 +436,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
                     android:layout_marginTop="10dp"
-                    android:layout_marginBottom="20dp"
+                    android:layout_marginBottom="24dp"
                     android:fontFamily="@font/montserrat_light"
                     android:text="Статистика обновляется автоматически\nпосле каждой сессии фокуса"
                     android:textAlignment="center"
@@ -442,48 +444,82 @@
                     android:textSize="14sp" />
             </LinearLayout>
         </ScrollView>
-
-        <!-- Нижняя панель навигации -->
-        <FrameLayout
-            android:id="@+id/layoutForButtons"
-            android:layout_width="0dp"
-            android:layout_height="70dp"
-            android:layout_marginHorizontal="5dp"
-            android:layout_marginBottom="20dp"
-            android:background="@drawable/button_background_for_all"
-            android:clickable="true"
-            android:focusable="true"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/buttonTaskList"
-                    android:layout_width="40dp"
-                    android:layout_height="38dp"
-                    android:layout_weight="1"
-                    app:srcCompat="@drawable/icon_task_list" />
-
-                <ImageView
-                    android:id="@+id/buttonGoal"
-                    android:layout_width="35dp"
-                    android:layout_height="35dp"
-                    android:layout_weight="1"
-                    app:srcCompat="@drawable/icon_goal" />
-
-                <ImageView
-                    android:id="@+id/buttonAnalytic"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_weight="1"
-                    app:srcCompat="@drawable/analytic_choosen_icon" />
-            </LinearLayout>
-        </FrameLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Нижняя панель навигации -->
+    <FrameLayout
+        android:id="@+id/layoutForButtons"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/button_background_for_all"
+        android:clickable="true"
+        android:focusable="true"
+        android:minHeight="64dp"
+        android:paddingVertical="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintWidth_max="450dp"
+        app:layout_constraintWidth_percent="0.92">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/buttonTaskList"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true"
+                android:maxWidth="46dp"
+                android:maxHeight="46dp"
+                app:srcCompat="@drawable/icon_task_list" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="0dp"
+                android:layout_marginHorizontal="12dp"
+                android:background="#FFFFFF"
+                android:alpha="0.3"
+                android:layout_weight="0" />
+
+            <ImageView
+                android:id="@+id/buttonGoal"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true"
+                android:maxWidth="46dp"
+                android:maxHeight="46dp"
+                app:srcCompat="@drawable/icon_goal" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="0dp"
+                android:layout_marginHorizontal="12dp"
+                android:background="#FFFFFF"
+                android:alpha="0.3"
+                android:layout_weight="0" />
+
+            <ImageView
+                android:id="@+id/buttonAnalytic"
+                android:layout_width="40dp"
+                android:layout_height="42dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true"
+                android:maxWidth="48dp"
+                android:maxHeight="48dp"
+                app:srcCompat="@drawable/analytic_choosen_icon" />
+        </LinearLayout>
+    </FrameLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
